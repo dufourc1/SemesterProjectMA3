@@ -18,6 +18,12 @@ import json
 class EnvWrapperGraph(RailEnv):
 	'''
 	class wrapping the normal flatland env and adding on top of that a representation of the netwrok in networkx
+
+	The graph_high_level G = (V,E) with V the cells of the matrix in the env (RailEnv object), with E (undirected edges )
+	representing the connection between two cells (a train can go from one to another)
+
+	The graph_low_level G = (V,E) with G representing two nodes per cell in the matrix to represent the and E being 
+	directed edges 
 	'''
 
 	def __init__(self,
@@ -36,6 +42,9 @@ class EnvWrapperGraph(RailEnv):
 
 
 	def create_graph_from_env(self,observation_builder):
+		'''
+		create the graph representations from the env object
+		'''
 
 		#initialize the graphs
 		graph_low_level = nx.DiGraph()
@@ -52,6 +61,9 @@ class EnvWrapperGraph(RailEnv):
 
 
 	def __add_edges(self,graph_high_level,graph_low_level,matrix_rail):
+		'''
+		add the edges to the graph
+		'''
 
 		for index,value in np.ndenumerate(matrix_rail):
 			#self.__create_edges_one_cell(index,value,graph_high_level,'high')
@@ -60,13 +72,38 @@ class EnvWrapperGraph(RailEnv):
 
 
 	def __create_edges_one_cell(self,index,value,graph,level = 'high'):
+		'''
+		Given a cell transtions possibilities, create edges and connect the cell to its neighbour 
+		with a convention to keep the "two way railway design" consistent in the case of th low
+		level graph
+		
+		Parameters
+		----------
+		index : tuple
+			coordinate of the cell in the matrix
+		value : int
+			value of the cell
+		graph : networkx.Graph()
+			graph with nodes corresponding to the matrix
+		level : str, optional
+			indicates which graph is dealt with, high or low level, by default 'high'
+		'''
+
+		#convertion
 		binary_rep = cell_to_byte(value)
 		name_node = tuple_to_str(index)
+
+
 		if level == 'low':
+
+			#get the possible transitions
 			results = identify_crossing(binary_rep)
 			for key,goals in results.items():
+
+				#get the departing node based on from where the train is coming
 				e1 = name_node + CONVENTION_FROM[key]
 				for goal in goals:
+					#get the goal node based on where the train is going
 					e2 = name_node +CONVENTION_TOWARDS[goal]
 					graph.add_edge(e1,e2)
 			return graph
@@ -77,6 +114,13 @@ class EnvWrapperGraph(RailEnv):
 
 	
 	def __add_nodes(self, graph_high_level,graph_low_level, matrix_rail):
+		'''
+		add nodes based on the matrix rail
+
+		the names of the nodes are obtained in the following way: 
+		(x,y) --> '000x000y' in the graph_high_level
+		(x,y) --> {'000x000ya' ,''000x000yb'} in the graph_low_level
+		'''
 
 		#add the rails to the graph as nodes (rails are positive in the matrix)
 		list_nodes = [tuple_to_str(index) for index, x in np.ndenumerate(matrix_rail) if x >0 ]

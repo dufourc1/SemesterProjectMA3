@@ -66,6 +66,18 @@ def print_cell_transition(cell_transition):
 
 
 def cell_to_byte(cell_info):
+	'''
+	transform the information in the rail matrix of an RailEnv object into
+	its byte representation
+	Parameters
+	----------
+	cell_info : int
+	
+	Returns
+	-------
+	str
+		byte representation of the int cell_info
+	'''
 	return bin(cell_info)[2:]
 
 
@@ -79,28 +91,29 @@ def get_direction(binary_4):
 
 
 def identify_crossing(matrix_rail_element):
+	'''
+	return the possible transitions from the cell described by matrix_rail_element
+	
+	Parameters
+	----------
+	matrix_rail_element : int
+		int converted byte representation of the possible transitions
+	
+	Returns
+	-------
+	dict
+	{
+		'N':['S','E'],
+		'E':[],
+		'S':['N'],
+		'W':['E']
+	}
+		
+	'''
 
 
-	# Translations_manip = Grid4Transitions(LISTE_TRANSITIONS)
 
 	byte_representation = bin(int(matrix_rail_element))[2:]
-	# count_of_ones = byte_representation.count('1')
-	# if count_of_ones == 0:
-	# 	return 'empty cell'
-	# elif count_of_ones == 1:
-	# 	return 'dead end'
-	# elif count_of_ones == 2:
-	# 	return 'simple'
-	# elif count_of_ones == 6:
-	# 	return 'double slip'
-	# elif count_of_ones == 8:
-	# 	return 'symetrical'
-	# else:
-	# 	if byte_representation == bin(LISTE_TRANSITIONS[3])[2:0]:
-	# 		return 'diamond crossing'
-	# 	else:
-	# 		return 'fuck'
-
 
 	#get the possible actions based on from where the agent is arriving
 	byte_north = byte_representation[0:4]
