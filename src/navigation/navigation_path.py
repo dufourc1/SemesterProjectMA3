@@ -112,7 +112,6 @@ def walk_many_paths(env, env_renderer, paths, draw = False):
     all_done = False
     
     for action in actions_list:
-        print(action)
     
     i = 0
     while all_done == False:
@@ -124,20 +123,14 @@ def walk_many_paths(env, env_renderer, paths, draw = False):
         for k in range(len(paths)):
             
             if  i < len(actions_list[k]):
-                print(actions_list[k])
                 actions_dict[k] = actions_list[k][i]
             else:
                 agents_done += 1
         
         if agents_done == len(paths):
             all_done = True
-        print(actions_dict)
         env.step(actions_dict)
         env_renderer.render_env(show=True, show_predictions=False, show_observations=False)
-        print(env.agents[0].position)
-        print(env.agents[1].position)
-        print(agents_done)
-        print(i)
         time.sleep(0.5)
         i += 1
 
