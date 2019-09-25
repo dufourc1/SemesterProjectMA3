@@ -110,9 +110,7 @@ def walk_many_paths(env, env_renderer, paths, draw = False):
     
     actions_list = [actions_for_path(path, env.agents[k].direction) for k, path in enumerate(paths)]
     all_done = False
-    
-    for action in actions_list:
-    
+        
     i = 0
     while all_done == False:
         
