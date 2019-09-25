@@ -1,7 +1,4 @@
-import numpy as np
-import colorsys
-
-
+import numpy as np 
 def graphic_coordinate(i,j):
     """
     Translates matrix coordinates into graphic coordinate for rendertools functions
@@ -24,8 +21,13 @@ def draw_multiple_paths(env_renderer, paths):
 #    number_of_paths = len(paths)
 #    HSV_tuples = [(x*1.0/number_of_paths, 0.5, 0.5) for x in range(number_of_paths)]
 #    RGB_tuples = list(map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples))
-
-    rgb_list = [(255,0,0),(172,0,0),(89,0,0),(0,255,0),(0,172,0),(0,89,0),(0,0,255),(0,0,172),(0,0,89)]
+    
+    rgb_list = [(255,0,0),(172,0,0),(89,0,0),
+                (0,255,0),(0,172,0),(0,89,0),
+                (0,0,255),(0,0,172),(0,0,89),
+                (255,255,0),(255,172,0),(255,89,0),(255,0,255),(255,0,172),(255,0,89),
+                (172,255,0),(172,172,0),(172,89,0),(172,0,255),(172,0,172),(172,0,89),
+                (89,255,0),(89,172,0),(89,89,0),(89,0,255),(89,0,172),(89,0,89)]
     for index, path in enumerate(paths):
         draw_path(env_renderer,
                   path,
