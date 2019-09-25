@@ -99,12 +99,11 @@ class EnvWrapperGraph(RailEnv):
 			#get the possible transitions
 			results = identify_crossing(binary_rep)
 			for key,goals in results.items():
-
 				#get the departing node based on from where the train is coming
 				e1 = name_node + CONVENTION_FROM[key]
 				for goal in goals:
 					#get the goal node based on where the train is going
-					e2 = name_node +CONVENTION_TOWARDS[goal]
+					e2 = tuple_to_str(get_node_direction(index,goal)) +CONVENTION_TOWARDS[goal]
 					graph.add_edge(e1,e2)
 			return graph
 		elif level == 'high':
@@ -133,7 +132,7 @@ class EnvWrapperGraph(RailEnv):
 
 
 
-	def show_graph(self,mode = 'spectral', options = None, node_names = False):
+	def show_graph(self,options = None):
 		'''
 		visualization of the graph
 		'''
@@ -143,20 +142,31 @@ class EnvWrapperGraph(RailEnv):
 			raise ImportError("matplotlib.pyplot was not loaded")
 
 		if options is None:
+			
 			options = {
 					'node_color': 'steelblue',
-					'node_size': 100,
+					'node_size': 20,
 					'width': 3,
+					'arrowsize':10,
 				}
-		if mode == 'spectral':
-			nx.draw_spectral(env.graph_low_level,with_labels=node_names, **options)
-			plt.show()
-		elif mode == 'classic':
-			nx.draw(env.graph_low_level,with_labels=node_names, **options)
-			plt.show()
-		else:
-			raise ValueError(f'this mode of projection ({mode}) is not implemented yet')
 
+		G = env.graph_low_level
+		print(G.edges)
+		pos = dict( (n, self.position(n)) for n in G.nodes() )
+		nx.draw(G,pos = pos ,**options)
+		plt.show()
+
+
+	def position(self,node_str):
+		ecart = 0.05
+		index = str_to_tuple(node_str[:-1])
+		y_coord = 0
+		x_coord = index[0]
+		if node_str[-1] == 'a':
+			y_coord = index[1] + ecart
+		else:
+			y_coord = index[1] - ecart
+		return (x_coord,y_coord)
 
 if __name__ == '__main__':
 
@@ -165,9 +175,9 @@ if __name__ == '__main__':
 
 	number_agents = 4
 
-
-	env = EnvWrapperGraph(width=7,
-              height=7,
+	size_side = 10
+	env = EnvWrapperGraph(width=size_side,
+              height=size_side,
               rail_generator=complex_rail_generator(nr_start_goal=10, nr_extra=1, min_dist=8, max_dist=99999, seed=0),
               schedule_generator=complex_schedule_generator(),
               number_of_agents=number_agents,
@@ -179,11 +189,8 @@ if __name__ == '__main__':
 	
 	env_renderer = RenderTool(env)
 	env_renderer.render_env(show=True, show_predictions=False, show_observations=True)
-	time.sleep(0.3)
+	time.sleep(3)
 
-	env.show_graph(mode = 'classic', node_names=False)
-	G = env.graph_low_level
-	print(G.edges)
-	pos = dict( (n, str_to_tuple(n[:-1])) for n in G.nodes() )
-	nx.draw(G,pos = pos)
-	plt.show()
+	env.show_graph()
+
+	

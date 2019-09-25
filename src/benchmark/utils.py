@@ -14,7 +14,7 @@ LISTE_TRANSITIONS =   [int('0000000000000000', 2),  # empty cell - Case 0
                        int('0001001000000000', 2),  # Case 1c (9)  - simple turn left
                        int('1100000000100010', 2)]  # Case 2b (10) - simple switch mirrored
 
-	
+
 
 trad_direction = {
 	0: 'N',
@@ -38,6 +38,19 @@ CONVENTION_FROM = {
 	'N':'a',
 	'E':'a'
 }
+
+
+def get_node_direction(index,direction):
+	if direction == 'N':
+		return (index[0]+1,index[1])
+	elif direction == 'S':
+		return (index[0]-1,index[1])
+	elif direction == 'E':
+		return (index[0],index[1]+1)
+	elif direction == 'W':
+		return (index[0],index[1]-1)
+	else:
+		raise ValueError(f"direction not recognized {direction}")
 
 def tuple_to_str(x, filled = 4):
 	'''
