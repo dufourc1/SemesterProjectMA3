@@ -183,66 +183,6 @@ def correct_endpoint(dic_transition):
 
 
 
-def transitions_to_edges(cell_index,matrix_transition):
-	'''
-	given a transition matrix and an index returns a list of nodes to add by doing a one step ahead 
-	to ensure proper connection of the graph_low_level
-	
-	Parameters
-	----------
-	cell_index : tuple
-	matrix_transition : nd.array
-
-
-	Return
-	--------
-	list of tuples representing the edges to add
-	'''
-
-
-	list_of_edges_to_add = []
-
-	#get the name of the node
-	name_node = tuple_to_str(cell_index)
-
-	#get the dictionnary of transition
-	results = identify_crossing(matrix_transition[cell_index])
-
-	for key,goals in results.items():
-
-		#get the departing node based on from where the train is coming
-		e1 = name_node + CONVENTION[key]
-
-		for goal in goals:
-
-			#get the goal node based on where the train is going by default
-			cell_receiving = get_node_direction(cell_index,goal)
-			e2 = tuple_to_str(cell_receiving) +CONVENTION[goal]
-
-			#check how the receiving node will behave 
-			transitions_tmp = identify_crossing(matrix_transition[cell_receiving])
-
-			#check that neither the receiving nor the sending node are endpoints
-			list_of_edges_to_add.append((e1,e2))
-			if is_turn(transitions_tmp):
-				for tmp_departure, tmp_arrivals in transitions_tmp.items():
-
-					#check that the arrival of the first node corresponds to the departure from the first one
-					if goal not in tmp_arrivals:
-						for elt in tmp_arrivals:
-							if tmp_departure == goal and key != elt:# and key!=goal:
-
-						
-								list_of_edges_to_add.remove((e1,e2))
-								e2 = e2[:-1] + CONVENTION[elt]
-								list_of_edges_to_add.append((e1,e2))
-								break
-					
-	return list_of_edges_to_add
-	
-
-		
-
 		
 def is_wrong_connections(index,graph,matrix_transition):
 	'''

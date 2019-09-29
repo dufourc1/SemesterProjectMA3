@@ -42,27 +42,33 @@ class EnvWrapperGraph(RailEnv):
 						schedule_generator,number_of_agents,
 						obs_builder_object)
 
-		self.graph_high_level, self.graph_low_level = self.create_graph_from_env(self.obs_builder)
+		self.graph_low_level = nx.DiGraph()
+		self.graph_high_level = nx.Graph()
+		self.create_graph_from_env(self.obs_builder)
 
 
 	def recompute_graph(self):
-		self.graph_high_level, self.graph_low_level = self.create_graph_from_env(self.obs_builder)
 
-	def create_graph_from_env(self,observation_builder):
+		#reinitialize the graphs
+		self.graph_high_level = nx.Graph()
+		self.graph_low_level = nx.DiGraph()
+		self.create_graph_from_env(self.obs_builder, verbose = True)
+
+	def create_graph_from_env(self,observation_builder, verbose = False):
 		'''
 		create the graph representations from the env object
 		'''
 
 		#initialize the graphs
-		graph_low_level = nx.DiGraph()
-		graph_high_level = nx.Graph()
+		graph_low_level = self.graph_low_level
+		graph_high_level = self.graph_high_level
 
 		#get the matrix representing the environment
 		matrix_rail = np.array(self.rail.grid.tolist())
 
 		self.__add_nodes(graph_high_level,graph_low_level,matrix_rail)
 
-		self.__add_edges(graph_high_level,graph_low_level,matrix_rail)
+		self.__add_edges(graph_high_level,graph_low_level,matrix_rail, verbose = verbose)
 
 		for node,_ in np.ndenumerate(matrix_rail):
 			if tuple_to_str(node) in graph_high_level.nodes:
@@ -81,21 +87,18 @@ class EnvWrapperGraph(RailEnv):
 					print(f'node {node} has a bad connection: {error}')
 
 
-		return  graph_high_level, graph_low_level
-
-
-	def __add_edges(self,graph_high_level,graph_low_level,matrix_rail):
+	def __add_edges(self,graph_high_level,graph_low_level,matrix_rail, verbose = False):
 		'''
 		add the edges to the graph
 		'''
 
 		for index,value in np.ndenumerate(matrix_rail):
 			self.__create_edges_one_cell(index,value,graph_high_level,'high')
-			self.__create_edges_one_cell(index,value,graph_low_level,'low',matrix_rail)
+			self.__create_edges_one_cell(index,value,graph_low_level,'low',matrix_rail, verbose = verbose)
 
 
 
-	def __create_edges_one_cell(self,index,value,graph,level = 'high', matrix_rail = None):
+	def __create_edges_one_cell(self,index,value,graph,level = 'high', matrix_rail = None, verbose = False):
 		'''
 		Given a cell transtions possibilities, create edges and connect the cell to its neighbour 
 		with a convention to keep the "two way railway design" consistent in the case of th low
@@ -131,8 +134,12 @@ class EnvWrapperGraph(RailEnv):
 			# 			graph.add_edge(e1,e2)
 			# 		else:
 			# 			print(f'warning on edge {e1}-->{e2}')
-			list_edges = transitions_to_edges(index,matrix_rail)
+			list_edges = self.transitions_to_edges(index,matrix_rail)
+			previous = len(graph.edges)
 			graph.add_edges_from(list_edges)
+
+			if previous < len(graph.edges) and verbose:
+				self.show_graph(high_level=False)
 
 		elif level == 'high':
 			results = identify_crossing(value)
@@ -236,6 +243,66 @@ class EnvWrapperGraph(RailEnv):
 
 			return (y_coord,-x_coord)
 
+
+	def transitions_to_edges(self,cell_index,matrix_transition):
+		'''
+		given a transition matrix and an index returns a list of nodes to add by doing a one step ahead 
+		to ensure proper connection of the graph_low_level
+		
+		Parameters
+		----------
+		cell_index : tuple
+		matrix_transition : nd.array
+
+
+		Return
+		--------
+		list of tuples representing the edges to add
+		'''
+
+
+		list_of_edges_to_add = []
+
+		#get the name of the node
+		name_node = tuple_to_str(cell_index)
+
+		#get the dictionnary of transition
+		results = identify_crossing(matrix_transition[cell_index])
+
+		for key,goals in results.items():
+
+			#get the departing node based on from where the train is coming
+			e1 = name_node + CONVENTION[key]
+
+			for goal in goals:
+
+				#get the goal node based on where the train is going by default
+				cell_receiving = get_node_direction(cell_index,goal)
+				e2 = tuple_to_str(cell_receiving) +CONVENTION[goal]
+
+				#check how the receiving node will behave 
+				transitions_tmp = identify_crossing(matrix_transition[cell_receiving])
+
+				#check that neither the receiving nor the sending node are endpoints
+				list_of_edges_to_add.append((e1,e2))
+				if is_turn(transitions_tmp):
+					for tmp_departure, tmp_arrivals in transitions_tmp.items():
+
+						#check that the arrival of the first node corresponds to the departure from the first one
+						if goal not in tmp_arrivals:
+							for elt in tmp_arrivals:
+								if tmp_departure == goal and key != elt:# and key!=goal:
+
+							
+									list_of_edges_to_add.remove((e1,e2))
+									e2 = e2[:-1] + CONVENTION[elt]
+									list_of_edges_to_add.append((e1,e2))
+									break
+						
+		return list_of_edges_to_add
+		
+
+			
 
 		
 
