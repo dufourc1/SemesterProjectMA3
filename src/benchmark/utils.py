@@ -1,5 +1,4 @@
 import numpy as np
-from flatland.core.grid.grid4 import Grid4Transitions
 
 
 LISTE_TRANSITIONS =   [int('0000000000000000', 2),  # empty cell - Case 0
@@ -316,7 +315,7 @@ def swap_if_needed(cell_index,G,matrix_transition):
 
 	
 
-def correct_double_edges_if_needed(graph_low_level,matrix):
+def correct_double_edges_if_needed(G,matrix):
 	for node in G.nodes:
 		for n in G.neighbors(node):
 			if node in G.neighbor(n):

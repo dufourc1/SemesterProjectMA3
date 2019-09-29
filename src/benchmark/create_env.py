@@ -6,6 +6,7 @@ import time
 from utils import *
 
 
+
 from flatland.envs.observations import *
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import complex_rail_generator,rail_from_manual_specifications_generator,random_rail_generator, RailGenerator
@@ -147,7 +148,7 @@ class EnvWrapperGraph(RailEnv):
 
 	
 	def __correct_graph(self,matrix, graph_low_level):
-		correct_double_edges_if_needed(graph_low_level,matrix)
+		#correct_double_edges_if_needed(graph_low_level,matrix)
 		for index,value in np.ndenumerate(matrix):
 			swap_if_needed(index,graph_low_level,matrix)
 			
