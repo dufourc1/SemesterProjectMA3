@@ -26,7 +26,9 @@ class NetworkGraph(nx.DiGraph):
 		super().__init__()
 		self.superNodes = {}
 		self.size = transition_matrix.shape
+		self.graph_connectivity = nx.Graph()
 		self.build(transition_matrix)
+		
 
 	def build(self,transition_matrix):
 		'''
@@ -37,6 +39,18 @@ class NetworkGraph(nx.DiGraph):
 		transition_matrix : numpy.ndarray
 		'''
 
+		self.__build_SuperNodes_list(transition_matrix)
+
+		
+	def __build_SuperNodes_list(self,transition_matrix):
+		'''
+		build the list of SuperNodes, instanciate the connection in them correctly and compute the 
+		connectivity graph but do not link super nodes together
+		
+		Parameters
+		----------
+		transition_matrix : numpy.ndarray
+		'''
 		for index, cell in np.ndenumerate(transition_matrix):
 			if cell > 0:
 				transition_dict = self.__get_transition_dictionnary(cell)
@@ -46,6 +60,21 @@ class NetworkGraph(nx.DiGraph):
 				#incorporate the supernode into the bigger graph
 				self.add_edges_from(superNode.edges())
 
+				self.graph_connectivity.add_edges_from(self.__get_edges_connectivity(index,transition_dict))
+
+
+
+	def __get_edges_connectivity(self,index,transition_dict):
+		'''
+		get the edges for the connectivity graph based on one cell
+		'''
+		raise NotImplementedError
+
+	def __link_SuperNodes(self):
+		'''
+		using self.connectivity_graph connects the superNodes together
+		'''
+		raise NotImplementedError
 
 
 	def __get_transition_dictionnary(self,cell_transition):
@@ -154,16 +183,13 @@ class SuperNode(nx.DiGraph):
 
 	Here is a visual representation of the inner working of such a SuperNode
 
-							North_out				South_in
-								|						|
+				North_out	Norht_in
+					
+		west_out				 	est_in
 
+		west_in 					est_out		
 
-	west_out <--														<-- west_in
-
-	east_in -->															--> est_out
-
-								|						|
-							North_in				South_out
+				South_in	South_out
 	'''
 
 	def __init__(self, index, transitions, nodes = ['N_in','N_out','E_in','E_out','W_in','W_out','S_in','S_out']):
@@ -197,7 +223,7 @@ class SuperNode(nx.DiGraph):
 
 		for in_direction,out_directions in transitions.items():
 			#get the name of the entry node
-			node_base = self.name + "_" + in_direction + self.in_suffix
+			node_base = self.name + "_" + OPPOSITE_DIRECTION[in_direction] + self.in_suffix
 
 			for out_direction in out_directions:
 				#get the name of the out node
@@ -211,22 +237,34 @@ class SuperNode(nx.DiGraph):
 		pretty plotting of the internal nodes of the superNode
 		'''
 		pos_init = {
-			'N_in':(1,1),
+			'S_in':(1,1),
 			'N_out':(1,4),
-			'E_in': (0,2) ,
+			'W_in': (0,2) ,
 			'E_out':(3,2),
-			'W_in':(3,3),
+			'E_in':(3,3),
 			'W_out':(0,3),
-			'S_in':(2,4),
+			'N_in':(2,4),
 			'S_out':(2,1)
 		}
 
+
 		pos = {}
+		labels = {}
 		#trick to add the proper nodes names
 		for k,elt in pos_init.items():
 			pos[self.name + "_" + k] = elt
+			labels[self.name + "_" + k] = k
 
+		options = {
+			'pos':pos,
+			'alpha': 0.8,
+			'with_labels': True,
+			'labels':labels,
+			'node_size': 1200,
+			'width': 3,
+			'arrowsize':10,
+		}
 
-		nx.draw(self,pos = pos, with_labels=True)
+		nx.draw(self,**options)
 		plt.show()
 
