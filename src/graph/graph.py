@@ -26,7 +26,7 @@ class NetworkGraph(nx.DiGraph):
 		super().__init__()
 		self.superNodes = {}
 		self.size = transition_matrix.shape
-		self.graph_connectivity = nx.Graph()
+		self.graph_connectivity = nx.DiGraph()
 		self.build(transition_matrix)
 		
 
@@ -39,7 +39,11 @@ class NetworkGraph(nx.DiGraph):
 		transition_matrix : numpy.ndarray
 		'''
 
+		#initialize the super nodes
 		self.__build_SuperNodes_list(transition_matrix)
+
+		#build the edges between the super nodes
+		self.__link_SuperNodes()
 
 		
 	def __build_SuperNodes_list(self,transition_matrix):
@@ -53,7 +57,11 @@ class NetworkGraph(nx.DiGraph):
 		'''
 		for index, cell in np.ndenumerate(transition_matrix):
 			if cell > 0:
+
+				#get the transition dict for this class
 				transition_dict = self.__get_transition_dictionnary(cell)
+
+				#initialize the superNode corresponding to this cell
 				superNode = SuperNode(index,transition_dict)
 				self.superNodes[index] = superNode
 
@@ -68,13 +76,46 @@ class NetworkGraph(nx.DiGraph):
 		'''
 		get the edges for the connectivity graph based on one cell
 		'''
-		raise NotImplementedError
+		edges = []
+		for _,directions in transition_dict.items():
+			for direction in directions:
+				if direction == 'N':
+					edges.append((index,(index[0]-1,index[1])))
+				elif direction == 'S':
+					edges.append((index,(index[0]+1,index[1]))
+				elif direction == 'E':
+					edges.append((index,(index[0],index[1]+1))
+				elif direction == 'W':
+					edges.append((index,(index[0],index[1]-1)))
+				else:
+					raise ValueError(f"direction not recognized: {direction}")
+
+		return edges
+
 
 	def __link_SuperNodes(self):
 		'''
-		using self.connectivity_graph connects the superNodes together
+		connects the superNodes together
 		'''
+		for node in self.graph_connectivity.nodes : 
+						
+			#get the neighbors of the node
+			neighbors = self.graph_connectivity.neighbors(node)
+
+			for n in neighbors:
+				#get the neighbor and connect it to the first superNode
+				self.connect_supernodes(node,n)
+
+
+	def connect_supernodes(self, index1,index2):
+
+		superNode_from = self.get_superNode_at(index1)
+		superNode_to = self.get_superNode_at(index2)
+
 		raise NotImplementedError
+		#TODO: check from where the connection is going (N,S,E,W) then connect appropriately
+
+				
 
 
 	def __get_transition_dictionnary(self,cell_transition):
