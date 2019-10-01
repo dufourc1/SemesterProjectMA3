@@ -17,6 +17,18 @@ OPPOSITE_DIRECTION = {
 	'E': 'W'
 }
 
+
+#jitter for pretty plotting
+JITTER = {
+			'S_in':[1,1],
+			'N_out':[1,4],
+			'W_in': [0,2] ,
+			'E_out':[3,2],
+			'E_in':[3,3],
+			'W_out':[0,3],
+			'N_in':[2,4],
+			'S_out':[2,1]
+}
 class NetworkGraph(nx.DiGraph):
 	'''
 	implementation of the graph extracted from a flatland network
@@ -66,7 +78,9 @@ class NetworkGraph(nx.DiGraph):
 				self.superNodes[index] = superNode
 
 				#incorporate the supernode into the bigger graph
+				self.add_nodes_from(superNode.nodes())
 				self.add_edges_from(superNode.edges())
+				
 
 				self.graph_connectivity.add_edges_from(self.__get_edges_connectivity(index,transition_dict))
 
@@ -135,7 +149,7 @@ class NetworkGraph(nx.DiGraph):
 		elif index1[0] != index2[0]:
 			
 			#cell1 is above cell2
-			if index1[1]<index2[1]:
+			if index1[0]<index2[0]:
 				connection_in = 'N_in'
 				connection_out = 'S_out'
 			#cell2 is below cell2
@@ -198,7 +212,7 @@ class NetworkGraph(nx.DiGraph):
 		}
 
 		#add minor correction for encpoint
-		self.__correct_endpoint(results)
+		#self.__correct_endpoint(results)
 
 		return results
 
@@ -248,6 +262,37 @@ class NetworkGraph(nx.DiGraph):
 		'''
 		return self.superNodes[index]
 
+	def position(self,node, jitter = 0.1):
+		'''
+		given a node of the graph, 
+		return its position for pretty plotting
+		
+		Parameters
+		----------
+		node : node of nx.DiGraph
+			obtained from G.ndoes()
+		'''
+
+		#get the cell index
+		name = node.split("_")[0].split(",")
+		#get the "port"
+		subname = "_".join(node.split("_")[-2:])
+		cell_index = (int(name[0][-1]),int(name[1][-2]))
+
+		#comput the position
+		position_node = (cell_index[0]+ jitter*JITTER[subname][0], cell_index[1] + jitter*JITTER[subname][1])
+		return position_node
+
+
+	def show(self, jitter = 0.1):		
+		'''
+		pretty plotting of the network graph
+		'''
+		plt.figure(figsize=(20,20))
+		node_color = 'steel_blue'
+		pos = dict( (n, self.position(n, jitter)) for n in self.nodes() )
+		nx.draw(self ,pos,with_labels = False)
+		plt.show()
 
 
 class SuperNode(nx.DiGraph):
