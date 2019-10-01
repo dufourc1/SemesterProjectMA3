@@ -82,9 +82,9 @@ class NetworkGraph(nx.DiGraph):
 				if direction == 'N':
 					edges.append((index,(index[0]-1,index[1])))
 				elif direction == 'S':
-					edges.append((index,(index[0]+1,index[1]))
+					edges.append((index,(index[0]+1,index[1])))
 				elif direction == 'E':
-					edges.append((index,(index[0],index[1]+1))
+					edges.append((index,(index[0],index[1]+1)))
 				elif direction == 'W':
 					edges.append((index,(index[0],index[1]-1)))
 				else:
@@ -98,7 +98,8 @@ class NetworkGraph(nx.DiGraph):
 		connects the superNodes together
 		'''
 		for node in self.graph_connectivity.nodes : 
-						
+		
+
 			#get the neighbors of the node
 			neighbors = self.graph_connectivity.neighbors(node)
 
@@ -112,8 +113,42 @@ class NetworkGraph(nx.DiGraph):
 		superNode_from = self.get_superNode_at(index1)
 		superNode_to = self.get_superNode_at(index2)
 
-		raise NotImplementedError
-		#TODO: check from where the connection is going (N,S,E,W) then connect appropriately
+		#get the relative position of the two cells
+
+		if np.linalg.norm(np.array(index1)-np.array(index2)) > 1:
+			raise ValueError(f'cells are two far apart and should not be connected: {index1}, {index2}')
+		
+		#connection is on the y axis
+		if index1[1] != index2[1]:
+
+			#cell1 is on the left of cell 2
+			if index1[1]<index2[1]:
+				connection_out = 'E_out'
+				connection_in = 'W_in'
+
+			#cell1 is on the right of cell2
+			else:
+				connection_out = 'W_out'
+				connection_in = 'E_in'
+
+		#connection is on the x axis
+		elif index1[0] != index2[0]:
+			
+			#cell1 is above cell2
+			if index1[1]<index2[1]:
+				connection_in = 'N_in'
+				connection_out = 'S_out'
+			#cell2 is below cell2
+			else:
+				connection_in = 'N_out'
+				connection_out = 'S_in'
+
+		else:
+			raise ValueError(f"trying to connect the same superNode with itself {index1}")
+
+
+		#actual connection
+		self.add_edge(superNode_from.name+"_"+connection_out,superNode_to.name +"_"+connection_in)
 
 				
 
