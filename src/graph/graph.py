@@ -29,6 +29,7 @@ JITTER = {
 			'N_in':[2,4],
 			'S_out':[2,1]
 }
+
 class NetworkGraph(nx.DiGraph):
 	'''
 	implementation of the graph extracted from a flatland network
@@ -82,7 +83,8 @@ class NetworkGraph(nx.DiGraph):
 				self.add_edges_from(superNode.edges())
 				
 
-				self.graph_connectivity.add_edges_from(self.__get_edges_connectivity(index,transition_dict))
+				self.graph_connectivity.add_edges_from(self.__get_edges_connectivity(index,
+																					transition_dict))
 
 
 
@@ -124,50 +126,55 @@ class NetworkGraph(nx.DiGraph):
 
 	def connect_supernodes(self, index1,index2):
 
-		superNode_from = self.get_superNode_at(index1)
-		superNode_to = self.get_superNode_at(index2)
-
-		#get the relative position of the two cells
-
-		if np.linalg.norm(np.array(index1)-np.array(index2)) > 1:
-			raise ValueError(f'cells are two far apart and should not be connected: {index1}, {index2}')
-		
-		#connection is on the y axis
-		if index1[1] != index2[1]:
-
-			#cell1 is on the left of cell 2
-			if index1[1]<index2[1]:
-				connection_out = 'E_out'
-				connection_in = 'W_in'
-
-			#cell1 is on the right of cell2
-			else:
-				connection_out = 'W_out'
-				connection_in = 'E_in'
-
-		#connection is on the x axis
-		elif index1[0] != index2[0]:
+		try: 
 			
-			#cell1 is above cell2
-			if index1[0]<index2[0]:
-				connection_in = 'N_in'
-				connection_out = 'S_out'
-			#cell2 is below cell2
+			superNode_from = self.get_superNode_at(index1)
+			superNode_to = self.get_superNode_at(index2)
+			if superNode_from.name == superNode_to.name:
+				raise ValueError(f'cannot link the same node {superNode_from},{superNode_to}')
+			#get the relative position of the two cells
+
+			if np.linalg.norm(np.array(index1)-np.array(index2)) > 1:
+				raise ValueError(f'cells are two far apart and ',
+									f'should not be connected: {index1}, {index2}')
+			
+			#connection is on the y axis
+			if index1[1] != index2[1]:
+
+				#cell1 is on the left of cell 2
+				if index1[1]<index2[1]:
+					connection_out = 'E_out'
+					connection_in = 'W_in'
+
+				#cell1 is on the right of cell2
+				else:
+					connection_out = 'W_out'
+					connection_in = 'E_in'
+
+			#connection is on the x axis
+			elif index1[0] != index2[0]:
+				
+				#cell1 is above cell2
+				if index1[0]<index2[0]:
+					connection_in = 'N_in'
+					connection_out = 'S_out'
+				#cell2 is below cell2
+				else:
+					connection_in = 'S_in'
+					connection_out = 'N_out'
+
 			else:
-				connection_in = 'N_out'
-				connection_out = 'S_in'
-
-		else:
-			raise ValueError(f"trying to connect the same superNode with itself {index1}")
+				raise ValueError(f"trying to connect the same superNode with itself {index1}")
 
 
-		#actual connection
-		self.add_edge(superNode_from.name+"_"+connection_out,superNode_to.name +"_"+connection_in)
-
+			#actual connection
+			self.add_edge(superNode_from.name+"_"+connection_out,superNode_to.name +"_"+connection_in)
+		except:
+			print(f' warning on connections between {index1} and {index2}')
 				
 
 
-	def __get_transition_dictionnary(self,cell_transition):
+	def __get_transition_dictionnary(self,cell_transition, supernode = False):
 		'''
 		return the possible transitions from the cell described by matrix_rail_element
 		
@@ -211,8 +218,9 @@ class NetworkGraph(nx.DiGraph):
 			'W':get_direction(W)
 		}
 
-		#add minor correction for encpoint
-		#self.__correct_endpoint(results)
+		#add minor correction for endpoint
+		if supernode:
+			self.__correct_endpoint(results)
 
 		return results
 
@@ -237,15 +245,23 @@ class NetworkGraph(nx.DiGraph):
 		correct the strange notation in the endpoints direction
 		'''
 		if self.__is_cell_endpoint(dic_transition):
+			print(dic_transition)
 			for key,item in dic_transition.items():
-				if len(item) == 1:
-					#check if opposite direction ('N' : ['S'])
-					if OPPOSITE_DIRECTION[key][0] == item[0]:
-						# change ('S':[] --> 'S':['S'])
-						dic_transition[item[0]].append(item[0])
-						#delete ('N':['S'] --> 'N':[])
-						dic_transition[key] = []
-
+				if len(item) == 1  :
+					if key != 'N' and key != 'S':
+						#check if opposite direction ('N' : ['S'])
+						if OPPOSITE_DIRECTION[key][0] == item[0]:
+							# change ('S':[] --> 'S':['S'])
+							dic_transition[item[0]].append(item[0])
+							#delete ('N':['S'] --> 'N':[])
+							dic_transition[key] = []
+					else:
+						#check if opposite direction ('N' : ['S'])
+						if OPPOSITE_DIRECTION[key][0] == item[0]:
+							# change ('N':['S'] --> 'S':['N'])
+							dic_transition[key] = [key]
+							
+			print(dic_transition)
 		
 	def get_superNode_at(self,index):
 		'''
@@ -272,7 +288,7 @@ class NetworkGraph(nx.DiGraph):
 		node : node of nx.DiGraph
 			obtained from G.ndoes()
 		'''
-
+		# print(node)
 		#get the cell index
 		name = node.split("_")[0].split(",")
 		#get the "port"
@@ -280,18 +296,23 @@ class NetworkGraph(nx.DiGraph):
 		cell_index = (int(name[0][-1]),int(name[1][-2]))
 
 		#comput the position
-		position_node = (cell_index[0]+ jitter*JITTER[subname][0], cell_index[1] + jitter*JITTER[subname][1])
-		return position_node
+		position_node = (cell_index[0] - jitter*JITTER[subname][1], 
+						cell_index[1] + jitter*JITTER[subname][0])
+		# print(position_node)
+		# print("\n")
+		return (position_node[1],-position_node[0])
 
 
-	def show(self, jitter = 0.1):		
+	def show(self, jitter = 0.1, title = None):		
 		'''
 		pretty plotting of the network graph
 		'''
 		plt.figure(figsize=(20,20))
 		node_color = 'steel_blue'
 		pos = dict( (n, self.position(n, jitter)) for n in self.nodes() )
-		nx.draw(self ,pos,with_labels = False)
+		nx.draw(self ,pos,with_labels = False, node_size=50)
+		if title is not None:
+			plt.savefig(title)
 		plt.show()
 
 
@@ -299,7 +320,9 @@ class SuperNode(nx.DiGraph):
 	'''
 	node containing multiple 8 internal nodes representing the switches
 
-	the different nodes are ['node.name_N_in','node.name_N_out','node.name_E_in','node.name_E_out','node.name_W_in','node.name_W_out','node.name_S_in','node.name_S_out']
+	the different nodes are ['node.name_N_in','node.name_N_out','node.name_E_in',
+							'node.name_E_out','node.name_W_in','node.name_W_out',
+							'node.name_S_in','node.name_S_out']
 
 
 	Here is a visual representation of the inner working of such a SuperNode
@@ -313,7 +336,8 @@ class SuperNode(nx.DiGraph):
 				South_in	South_out
 	'''
 
-	def __init__(self, index, transitions, nodes = ['N_in','N_out','E_in','E_out','W_in','W_out','S_in','S_out']):
+	def __init__(self, index, transitions, nodes = ['N_in','N_out','E_in','E_out',
+													'W_in','W_out','S_in','S_out']):
 
 		super().__init__()
 		self.name = str(index)
@@ -357,22 +381,11 @@ class SuperNode(nx.DiGraph):
 		'''
 		pretty plotting of the internal nodes of the superNode
 		'''
-		pos_init = {
-			'S_in':(1,1),
-			'N_out':(1,4),
-			'W_in': (0,2) ,
-			'E_out':(3,2),
-			'E_in':(3,3),
-			'W_out':(0,3),
-			'N_in':(2,4),
-			'S_out':(2,1)
-		}
-
 
 		pos = {}
 		labels = {}
 		#trick to add the proper nodes names
-		for k,elt in pos_init.items():
+		for k,elt in JITTER.items():
 			pos[self.name + "_" + k] = elt
 			labels[self.name + "_" + k] = k
 
