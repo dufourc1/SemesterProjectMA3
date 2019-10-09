@@ -1,1 +1,1 @@
-from .graph import NetworkGraph
+from .NetworkGraph import NetworkGraph
