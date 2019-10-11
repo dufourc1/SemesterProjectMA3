@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
+
 class TimeNetwork:
 
 	'''
@@ -34,24 +35,43 @@ class TimeNetwork:
 			[description], by default 1e10
 		'''
 
+		#the time expanded graph
 		self.graph = nx.DiGraph()
+
+		#the building block of the time expanded graph: one time step expansion + one intermediate layer
+		self.block = nx.DiGraph()
 		self.last_time_step = 0
 
 
-		#extract the nodes
-		self.basis_layer = 	self.build_base_layer(incoming_graph_data = incoming_graph_data,
-													default_capacity = default_capacity,
-													default_weight = default_weight,
-													waiting_cost = waiting_cost,
-													waiting_capacity = waiting_capacity)
+		#extract the nodes and build the first layer of the time expanded graph
+		self.basis_layer, self.list_nodes = self.build_base_layer(incoming_graph_data = incoming_graph_data,
+																	default_capacity = default_capacity,
+																	default_weight = default_weight,
+																	waiting_cost = waiting_cost,
+																	waiting_capacity = waiting_capacity)
 
-		# self.intermediate_layer = self.build_intermediate_layer(incoming_graph_data,
-		# 														intermediate_weight,
-		# 														intermediate_capacity)
+		#build the intermediate layer
+		self.intermediate_layer = self.build_intermediate_layer(incoming_graph_data,
+																intermediate_weight,
+																intermediate_capacity)
 
-		self.graph.update(self.basis_layer)
+		#connect the two layers
+		self.block = self.connect_first_layers()
+		self.graph.update(self.block)
+
+		for i in range(depth):
+			self.build_new_depth_network()
 
 
+
+		# self.connect_sources_and_sink()
+
+		
+
+
+	def connect_sources_and_sink(self):
+
+		raise NotImplementedError
 
 
 	def build_base_layer(self,incoming_graph_data, 
@@ -92,7 +112,7 @@ class TimeNetwork:
 
 		#keeping track of the layer
 		t = self.last_time_step
-
+		list_nodes = []
 
 		basis_layer = nx.DiGraph()
 
@@ -109,6 +129,7 @@ class TimeNetwork:
 
 			#keep track of the old name in the graph
 			old_name = node
+			list_nodes.append(str(old_name))
 
 			#add the nodes for one time step
 			name_time_t = str(node)+"_t" + str(t)
@@ -142,40 +163,94 @@ class TimeNetwork:
 
 		#update the number of layer existing
 		self.last_time_step += 2
-		return basis_layer
+		return basis_layer, list_nodes
 
 	def build_intermediate_layer(self,
 								incoming_graph_data,
 								intermediate_weight,
 								intermediate_capacity):
 
-		#do stuff
+		inter_layer = nx.DiGraph()
+		for i,node in enumerate(self.list_nodes):
+			inter_layer.add_node(node+"_t"+str(self.last_time_step),pos = (i,self.last_time_step))
 		self.last_time_step += 1
-		raise NotImplemented
 
-			
+		return inter_layer
 
-	def build_new_depth_network(self,type_network = 'basis'):
+	def connect_first_layers(self):
 		'''
-		take the layer and update the names of the nodes to make it ready to be added 
-		in top of the originaly existing graph, then add it to the already existing network
+		[summary]
+		
+		Returns
+		-------
+		[type]
+			[description]
+		'''
+
+		graph_inter = nx.DiGraph()
+		graph_inter.update(self.basis_layer)
+		graph_inter.update(self.intermediate_layer)
+		
+		#get the upper layer of the basislayer
+		time_stamps = set([int(x.split("_t")[-1]) for x in self.basis_layer.nodes])
+
+		nodes_to_connect_basis_layer = [node for node in self.basis_layer.nodes if int(node.split("_t")[-1])==max(time_stamps)]
+
+		for node in nodes_to_connect_basis_layer:
+
+			#get the true name of the node and the corresponding time step 
+			name_node,t = node.split("_t")
+			t = int(t)
+
+			graph_inter.add_edge(node,name_node + "_t"+str(t+1), weight = 0, capacity = 1)
+
+
+		return graph_inter
+
+
+	def build_new_depth_network(self):
+
+		#get the new block to add with the updated name wrt to time stamp
+		layer_new = self.updated_name_block()
+
+		nodes_to_connect_basis_layer = [node for node in self.graph.nodes if int(node.split("_t")[-1])==self.last_time_step-1]
+		nodes_to_connect_new_layer = [node for node in layer_new.nodes if int(node.split("_t")[-1])==self.last_time_step]
+		nodes_to_connect_basis_layer.sort()
+		nodes_to_connect_new_layer.sort()
+
+		self.graph.update(layer_new)
+
+
+		for node_from,node_to in zip(nodes_to_connect_basis_layer,nodes_to_connect_new_layer):
+			self.graph.add_edge(node_from,node_to,weight = 0,capacity = 1)
+
+		self.last_time_step += 2
+	
+
+
+	def updated_name_block(self):
+		layer = nx.relabel_nodes(self.block, lambda x: self.update_time_stamp_names(x,self.last_time_step))
+		for node in layer.nodes:
+			layer.node[node]['pos'] = (layer.node[node]['pos'][0],int(node.split("_t")[-1]))
+		return layer
+
+
+	def update_time_stamp_names(self,name,t):
+		'''
+		update the time stamp on the name, replacing it by the time t
 		
 		Parameters
 		----------
-		type_network : str, optional
-			basis layer or intermediate layer, by default 'basis'
+		name : [type]
+			[description]
+		t : [type]
+			[description]
+		
+		Returns
+		-------
+		[type]
+			[description]
 		'''
-		if type_network == 'basis':
-			layer_inter = nx.relabel_nodes(basis_layer, lambda x: self.update_time_stamp_names(x,self.last_time_step))
-			self.last_time_step += 2
-			raise NotImplementedError
-		elif type_network == 'intermediate':
-			# do stuff
-			self.last_time_step += 1
-			raise NotImplementedError
-	
-
-	def update_time_stamp_names(self,name,t):
 		name_original = name.split("_t")[0]
 		t_original = int(name.split("_t")[-1])
 		if t_original == 0:
@@ -185,12 +260,13 @@ class TimeNetwork:
 		return name_updated
 
 
-	def show(self):
+	def show(self, details = False):
 		pos=nx.get_node_attributes(self.graph,'pos')
 		nx.draw(self.graph,pos, with_labels = True)
 		weights = nx.get_edge_attributes(self.graph,'weight')
 		capacities = nx.get_edge_attributes(self.graph,'capacity')
 		labels = {}
-		for key in weights.keys():
-			labels[key] = (weights[key],capacities[key])
+		if details:
+			for key in weights.keys():
+				labels[key] = (weights[key],capacities[key])
 		_ = nx.draw_networkx_edge_labels(self.graph,pos,edge_labels=labels)
