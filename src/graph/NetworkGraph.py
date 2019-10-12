@@ -59,25 +59,20 @@ class NetworkGraph(nx.DiGraph):
 		self.__link_SuperNodes()
 
 		#print a warning if the sanity check was not passed
-		if not self.sanity_check():
-			print("Error detected in the sanity check")
+		self.sanity_check()
 
 	def sanity_check(self):
 		'''
 		perform a simple sanity check on the graph extracted from the environment
 		by checking for cycle in the directed graph
 		
-		Returns
-		-------
-		bool
-			true if the sanity check is passed, False otherwise
 		'''
 		try:
 			cycles = nx.find_cycle(self)
+			print("cycles detected in NetworkGraph, this may be due to the fact that endpoint can be used to do 180 turn")
 		except(nx.NetworkXNoCycle):
-			return True
-		return False
-
+			pass
+		
 		
 	def __build_SuperNodes_list(self,transition_matrix):
 		'''
@@ -286,6 +281,21 @@ class NetworkGraph(nx.DiGraph):
 			# 								'W':[]
 			# 							}
 		return dic_transition
+
+	def get_cell_position_node(self,node):
+		'''
+		return the index of the cell where node belongs as a tuple
+		
+		Parameters
+		----------
+		node : str
+			name of the node in the graph
+		'''
+		
+		inter = node.split("_")[0]
+		return (int(inter[1]),int(inter[4]))
+
+		
 		
 	def get_superNode_at(self,index):
 		'''
@@ -395,7 +405,9 @@ class SuperNode(nx.DiGraph):
 			node_base = self.name + "_" + OPPOSITE_DIRECTION[in_direction] + self.in_suffix
 
 			for out_direction in out_directions:
-				if self.__check_180_turn(in_direction,out_direction):
+				#uncomment this line to forbid 180 turn at endpoint
+				#if self.__check_180_turn(in_direction,out_direction):
+				if True:
 					#get the name of the out node
 					node_arrival =self.name + "_" + out_direction + self.out_suffix
 

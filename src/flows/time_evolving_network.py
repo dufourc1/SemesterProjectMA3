@@ -17,7 +17,8 @@ class TimeNetwork:
 				waiting_cost = 0, 
 				waiting_capacity = 1e6,
 				intermediate_weight = 0,
-				intermediate_capacity = 1):
+				intermediate_capacity = 1,
+				flatland = True):
 		
 
 		'''
@@ -35,6 +36,8 @@ class TimeNetwork:
 			[description], by default 1e10
 		'''
 
+
+		self.depth = depth
 		#the time expanded graph
 		self.graph = nx.DiGraph()
 
@@ -42,26 +45,29 @@ class TimeNetwork:
 		self.block = nx.DiGraph()
 		self.last_time_step = 0
 
-
 		#extract the nodes and build the first layer of the time expanded graph
 		self.basis_layer, self.list_nodes = self.build_base_layer(incoming_graph_data = incoming_graph_data,
 																	default_capacity = default_capacity,
 																	default_weight = default_weight,
 																	waiting_cost = waiting_cost,
-																	waiting_capacity = waiting_capacity)
+																	waiting_capacity = waiting_capacity,
+																	flatland = flatland)
 
+		#take the cell index for the flatland graph
+		self.liste_cells = [(int(x.split("_")[0][1]), int(x.split("_")[0][-2])) for x in self.list_nodes]
 		#build the intermediate layer
 		self.intermediate_layer = self.build_intermediate_layer(incoming_graph_data,
 																intermediate_weight,
-																intermediate_capacity)
+																intermediate_capacity,
+																flatland)
 
 		#connect the two layers
-		self.block = self.connect_first_layers()
+		self.block = self.connect_first_layers(flatland)
 		self.graph.update(self.block)
 
-		for i in range(depth):
-			self.build_new_depth_network()
 
+		for i in range(depth):
+			self.build_new_depth_network(flatland)
 
 
 		# self.connect_sources_and_sink()
@@ -78,7 +84,8 @@ class TimeNetwork:
 						default_weight = 0, 
 						default_capacity = 1e6, 
 						waiting_cost = None,
-						waiting_capacity = None):
+						waiting_capacity = None,
+						flatland = True):
 		'''
 		[summary]
 		
@@ -129,7 +136,12 @@ class TimeNetwork:
 
 			#keep track of the old name in the graph
 			old_name = node
-			list_nodes.append(str(old_name))
+			if flatland:
+				cell_index = old_name.split("_")[0]
+				if cell_index not in list_nodes:
+					list_nodes.append(cell_index)
+			else:
+				list_nodes.append(str(old_name))
 
 			#add the nodes for one time step
 			name_time_t = str(node)+"_t" + str(t)
@@ -168,16 +180,20 @@ class TimeNetwork:
 	def build_intermediate_layer(self,
 								incoming_graph_data,
 								intermediate_weight,
-								intermediate_capacity):
+								intermediate_capacity,
+								flatland):
 
 		inter_layer = nx.DiGraph()
 		for i,node in enumerate(self.list_nodes):
-			inter_layer.add_node(node+"_t"+str(self.last_time_step),pos = (i,self.last_time_step))
+			if flatland:
+				inter_layer.add_node(node+"_t"+str(self.last_time_step),pos = (8*i,self.last_time_step))
+			else:
+				inter_layer.add_node(node+"_t"+str(self.last_time_step),pos = (i,self.last_time_step))
 		self.last_time_step += 1
 
 		return inter_layer
 
-	def connect_first_layers(self):
+	def connect_first_layers(self,flatland = False):
 		'''
 		[summary]
 		
@@ -201,14 +217,16 @@ class TimeNetwork:
 			#get the true name of the node and the corresponding time step 
 			name_node,t = node.split("_t")
 			t = int(t)
-
-			graph_inter.add_edge(node,name_node + "_t"+str(t+1), weight = 0, capacity = 1)
+			if flatland:
+				graph_inter.add_edge(node,name_node.split("_")[0] + "_t"+str(t+1), weight = 0, capacity = 1)
+			else:
+				graph_inter.add_edge(node,name_node + "_t"+str(t+1), weight = 0, capacity = 1)
 
 
 		return graph_inter
 
 
-	def build_new_depth_network(self):
+	def build_new_depth_network(self,flatland = False):
 
 		#get the new block to add with the updated name wrt to time stamp
 		layer_new = self.updated_name_block()
@@ -220,11 +238,16 @@ class TimeNetwork:
 
 		self.graph.update(layer_new)
 
+		if flatland:
+			for node_from in nodes_to_connect_basis_layer:
+				for node_to in nodes_to_connect_new_layer:
+					if node_to.split("_")[0] == node_from.split("_")[0]:
+						self.graph.add_edge(node_from,node_to,weight = 0,capacity = 1)
+		else:
+			for node_from,node_to in zip(nodes_to_connect_basis_layer,nodes_to_connect_new_layer):
+				self.graph.add_edge(node_from,node_to,weight = 0,capacity = 1)
 
-		for node_from,node_to in zip(nodes_to_connect_basis_layer,nodes_to_connect_new_layer):
-			self.graph.add_edge(node_from,node_to,weight = 0,capacity = 1)
-
-		self.last_time_step += 2
+		self.last_time_step += 3
 	
 
 
@@ -253,16 +276,16 @@ class TimeNetwork:
 		'''
 		name_original = name.split("_t")[0]
 		t_original = int(name.split("_t")[-1])
-		if t_original == 0:
-			name_updated = name_original + "_t" + str(t)
-		else:
-			name_updated = name_original + "_t" + str(t+1)
+		name_updated = name_original + "_t" + str(t+t_original%3)
 		return name_updated
 
 
 	def show(self, details = False):
+		largeur = min(len(list(self.basis_layer.nodes)),20)
+		longueur = min(int(3*(self.depth+1)),20)
+		plt.figure(figsize=(largeur,longueur))
 		pos=nx.get_node_attributes(self.graph,'pos')
-		nx.draw(self.graph,pos, with_labels = True)
+		nx.draw(self.graph,pos, with_labels = details)
 		weights = nx.get_edge_attributes(self.graph,'weight')
 		capacities = nx.get_edge_attributes(self.graph,'capacity')
 		labels = {}

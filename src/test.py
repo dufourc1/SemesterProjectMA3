@@ -1,3 +1,6 @@
+#%%
+
+
 import random
 import numpy as np
 from flatland.envs.observations import TreeObsForRailEnv
@@ -29,8 +32,8 @@ env_renderer.render_env(show=True, show_predictions=False, show_observations=Fal
 
 #%%
 
-path_0 = [(0,1),(0,2),(1,2),(1,3),(2,3),(2,4),(2,5),(3,5),(4,5)]
-path_1 = [(4,1),(3,1),(3,2),(3,3),(3,3),(2,3),(1,3),(1,4),(1,5),(1,6)]
+path_0 = [(0,1),(0,2),(1,2),(1,3),(2,3),(2,4),(2,5),(3,5),(4,5),(5,5)]
+path_1 = [(4,1),(3,1),(3,2),(3,3),(3,3),(2,3),(1,3),(1,4),(1,5),(1,6),(1,7)]
 paths = [path_0, path_1]
 
 walk_many_paths(env,env_renderer,paths,draw=True)
@@ -42,3 +45,6 @@ walk_many_paths(env,env_renderer,paths,draw=True)
 #                                                          current_depth=0)
 #actions = actions_for_path(path,3)
 #walk_path(env,env_renderer,path_0,0)
+
+
+#%%
