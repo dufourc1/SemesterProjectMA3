@@ -35,13 +35,17 @@ class NetworkGraph(nx.DiGraph):
 	implementation of the graph extracted from a flatland network
 	'''
 
-	def __init__(self, transition_matrix):
+	def __init__(self, transition_matrix,sources = [],sinks = []):
+
 		super().__init__()
 		self.superNodes = {}
+		assert len(sources) == len(sinks), 'sources and sinks are supposed to have same lengths'
+		self.sources = sources
+		self.sinks = sinks
 		self.size = transition_matrix.shape
 		self.graph_connectivity = nx.DiGraph()
 		self.build(transition_matrix)
-		
+
 
 	def build(self,transition_matrix):
 		'''
@@ -92,10 +96,12 @@ class NetworkGraph(nx.DiGraph):
 				#initialize the superNode corresponding to this cell
 				superNode = SuperNode(index,transition_dict)
 				self.superNodes[index] = superNode
+						
 
-				#incorporate the supernode into the bigger graph
-				self.add_nodes_from(superNode.nodes())
-				self.add_edges_from(superNode.edges())
+				#add the nodes with the data to the graph
+				#incorporate the supernode edges into the bigger graph
+				self.add_nodes_from(superNode.nodes)
+				self.add_edges_from(superNode.edges)
 				
 
 				self.graph_connectivity.add_edges_from(self.__get_edges_connectivity(index,
@@ -414,6 +420,15 @@ class SuperNode(nx.DiGraph):
 					#add an edge between them
 					self.add_edge(node_base,node_arrival)
 
+	def update_node_attribute(self,annotations):
+		for node in self.nodes:
+			for key,item in annotations.items():
+				if item.startswith('source') and node.endswith('out'):
+					self.node[node][key] = item
+				elif item.startswith("sink") and node.endswith('in'):
+					self.node[node][key] = item
+				elif item == 'transshipment':
+					self.node[node][key] = item
 
 	def __check_180_turn(self,in_direction,out_direction):
 		'''

@@ -10,7 +10,7 @@ class TimeNetwork:
 
 
 	def __init__(self, 
-				incoming_graph_data = None,
+				graph_data = None,
 				depth = 1,
 				default_weight = 0,
 				default_capacity = 1e10, 
@@ -36,6 +36,11 @@ class TimeNetwork:
 			[description], by default 1e10
 		'''
 
+
+		#reduce the nodes space by dropping from the graph the isolated vertices
+		incoming_graph_data = nx.DiGraph()
+		incoming_graph_data.add_edges_from(graph_data.edges)
+		incoming_graph_data.remove_nodes_from(list(nx.isolates(incoming_graph_data)))
 
 		self.depth = depth
 		#the time expanded graph
@@ -186,7 +191,7 @@ class TimeNetwork:
 		inter_layer = nx.DiGraph()
 		for i,node in enumerate(self.list_nodes):
 			if flatland:
-				inter_layer.add_node(node+"_t"+str(self.last_time_step),pos = (8*i,self.last_time_step))
+				inter_layer.add_node(node+"_t"+str(self.last_time_step),pos = (2*i,self.last_time_step))
 			else:
 				inter_layer.add_node(node+"_t"+str(self.last_time_step),pos = (i,self.last_time_step))
 		self.last_time_step += 1
@@ -218,7 +223,8 @@ class TimeNetwork:
 			name_node,t = node.split("_t")
 			t = int(t)
 			if flatland:
-				graph_inter.add_edge(node,name_node.split("_")[0] + "_t"+str(t+1), weight = 0, capacity = 1)
+				if name_node.endswith("out"):
+					graph_inter.add_edge(node,name_node.split("_")[0] + "_t"+str(t+1), weight = 0, capacity = 1)
 			else:
 				graph_inter.add_edge(node,name_node + "_t"+str(t+1), weight = 0, capacity = 1)
 
@@ -241,7 +247,7 @@ class TimeNetwork:
 		if flatland:
 			for node_from in nodes_to_connect_basis_layer:
 				for node_to in nodes_to_connect_new_layer:
-					if node_to.split("_")[0] == node_from.split("_")[0]:
+					if node_to.split("_")[0] == node_from.split("_")[0] and node_to.split("_t")[0].endswith("in"):
 						self.graph.add_edge(node_from,node_to,weight = 0,capacity = 1)
 		else:
 			for node_from,node_to in zip(nodes_to_connect_basis_layer,nodes_to_connect_new_layer):
