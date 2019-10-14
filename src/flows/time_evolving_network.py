@@ -21,9 +21,9 @@ class TimeNetwork:
 				graph_data,
 				depth = 1,
 				default_weight = 0,
-				default_capacity = 1e10, 
+				default_capacity = 1, 
 				waiting_cost = 0, 
-				waiting_capacity = 1e6):
+				waiting_capacity = 1):
 	
 
 		if depth < 1:
@@ -144,7 +144,7 @@ class TimeNetwork:
 			if 'weight' in data_edge.keys():
 				new_data_edge['weight'] = data_edge['weight']
 			else:
-				new_data_edge['weight'] = default_weight
+				new_data_edge['weight'] = 1
 
 			#get the updated endpoints for the graph
 			basis_layer.add_edges_from([(str(edge[0])+"_t"+str(t),str(edge[1])+"_t"+str(t+1))],**new_data_edge)
