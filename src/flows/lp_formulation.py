@@ -221,8 +221,8 @@ class MCFlow:
 		add the flow conservation constraint according to the different sources, sinks and transshipment nodes
 		'''
 		self.m.addConstrs(
-			(self.flow.sum(h,'*',j) + self.inflow[h,j] == self.flow.sum(h,j,'*')
-			for h in self.commodities for j in self.nodes), "flow")
+			(self.flow.sum(k,'*',j) + self.inflow[k,j] == self.flow.sum(k,j,'*')
+			for k in self.commodities for j in self.nodes), "flow")
 		# Alternate version:
 		# m.addConstrs(
 		#   (quicksum(flow[h,i,j] for i,j in arcs.select('*',j)) + inflow[h,j] ==
@@ -243,6 +243,19 @@ class MCFlow:
 		
 		for set_constraints in topology:
 			self.m.addConstrs(
-				(self.flow.sum('*',i,j) <= self.capacity[i,j] for i,j in set_constraints), "topo")
+				(self.flow.sum('*',i,j) <= 1 for i,j in set_constraints), "topo")
+
+	def add_swapping_constraints(self,swapping_edges):
+		'''
+		addd constraint to avoid swapping of flows from one topology to another
+		
+		Parameters
+		----------
+		swapping_edges : list of set
+			list of disjoint set, each set contains all the possible ways to go from cell1 to cell2 and vice-versa
+		'''
+		for set_constraints in swapping_edges:
+			self.m.addConstrs(
+				(self.flow.sum('*',i,j) <= 1 for i,j in set_constraints), "swap")
 
 

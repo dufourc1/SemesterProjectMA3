@@ -184,6 +184,14 @@ class TimeNetwork:
 		return topology
 
 	def get_swapping_edges(self):
+		'''
+		
+
+		Returns
+		-------
+		swapping_edges : list of set
+			list of disjoint set, each set contains all the possible ways to go from cell1 to cell2 and vice-versa
+		'''
 		raise NotImplementedError
 
 
