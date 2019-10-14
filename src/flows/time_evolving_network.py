@@ -164,16 +164,17 @@ class TimeNetwork:
 		topology_dict = {}
 		for cell in self.list_cells:
 			topology_dict[cell] = {}
-		for node in self.graph.nodes:
+		for edge in self.graph.edges:
 			for key,item in topology_dict.items():
-				if node.startswith(str(key)):
-					time = int(node.split("_t")[-1])
-					if time in topology_dict[key].keys():
-						topology_dict[key][time].add(node)
-					else:
-						topology_dict[key][time] = set()
-						topology_dict[key][time].add(node)
-					break
+				if edge[0].startswith(str(key)) and edge[1].startswith(str(key)):
+					if int(edge[0].split("_t")[-1]) == int(edge[1].split("_t")[-1]):
+						time = int(edge[0].split("_t")[-1])
+						if time in topology_dict[key].keys():
+							topology_dict[key][time].add(edge)
+						else:
+							topology_dict[key][time] = set()
+							topology_dict[key][time].add(edge)
+						break
 		
 		topology = []
 		for _, item in topology_dict.items():
