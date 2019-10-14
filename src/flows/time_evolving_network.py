@@ -64,6 +64,8 @@ class TimeNetwork:
 		for i in range(depth-1):
 			self.build_new_depth_network()
 
+		self.topology = self.get_topology_network()
+
 
 	def connect_sources_and_sink(self, sources, sinks):
 
@@ -88,6 +90,8 @@ class TimeNetwork:
 				if node.startswith(str(sink)) and 'in' in node:
 					if not node.endswith("0"):
 						self.graph.add_edge(node,sink_name, capacity = 1, weight = 0)
+		
+		self.topology = self.get_topology_network()
 
 
 
@@ -152,6 +156,33 @@ class TimeNetwork:
 		#update the number of layer existing
 		self.last_time_step += 2
 		return basis_layer, list_nodes
+
+	def get_topology_network(self):
+		'''
+		get the topology of the network
+		'''
+		topology_dict = {}
+		for cell in self.list_cells:
+			topology_dict[cell] = {}
+		for node in self.graph.nodes:
+			for key,item in topology_dict.items():
+				if node.startswith(str(key)):
+					time = int(node.split("_t")[-1])
+					if time in topology_dict[key].keys():
+						topology_dict[key][time].add(node)
+					else:
+						topology_dict[key][time] = set()
+						topology_dict[key][time].add(node)
+					break
+		
+		topology = []
+		for _, item in topology_dict.items():
+			for _,item2 in item.items():
+				topology.append(item2)
+		
+		return topology
+
+
 
 
 
