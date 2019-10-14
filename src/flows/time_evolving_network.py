@@ -167,7 +167,7 @@ class TimeNetwork:
 		for edge in self.graph.edges:
 			for key,item in topology_dict.items():
 				if edge[0].startswith(str(key)) and edge[1].startswith(str(key)):
-					if int(edge[0].split("_t")[-1]) == int(edge[1].split("_t")[-1]):
+					if abs(int(edge[0].split("_t")[-1]) - int(edge[1].split("_t")[-1]))==1:
 						time = int(edge[0].split("_t")[-1])
 						if time in topology_dict[key].keys():
 							topology_dict[key][time].add(edge)
@@ -182,6 +182,9 @@ class TimeNetwork:
 				topology.append(item2)
 		
 		return topology
+
+	def get_swapping_edges(self):
+		raise NotImplementedError
 
 
 
