@@ -80,10 +80,10 @@ class TimeNetwork:
 		for agent, (source,sink) in enumerate(zip(sources,sinks)):
 			source_name = "source_agent_"+str(agent)
 			sink_name = "sink_agent_"+str(agent)
-			self.graph.add_node(source_name,pos = [-5,agent+0.2])
+			self.graph.add_node(source_name,pos = [agent,-1])
 			self.graph.add_node(sink_name,pos = [number_nodes +5 ,agent+0.2])
 			for node in self.graph.nodes:
-				if node.startswith(str(source)) and 'out' in node and node.endswith("0") :
+				if node.startswith(str(source)) and 'out' in node and node.endswith("t0") :
 					self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
 				if node.startswith(str(sink)) and 'in' in node:
 					if not node.endswith("0"):
