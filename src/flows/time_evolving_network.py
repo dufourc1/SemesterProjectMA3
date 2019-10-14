@@ -1,6 +1,11 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
+def parse_tuple_from_txt(tuple_str):
+    interest = tuple_str.split("_")[0]
+    interest_left = interest.split("(")[1].split(",")[0]
+    interest_right = interest.split(")")[0].split(",")[1]
+    return (int(interest_left),int(interest_right))
 
 class TimeNetwork:
 
@@ -54,7 +59,7 @@ class TimeNetwork:
 																	waiting_capacity = waiting_capacity)
 
 		#take the cell index for the flatland graph
-		self.list_cells = [(int(x.split("_")[0][1]), int(x.split("_")[0][-2])) for x in self.list_nodes]
+		self.list_cells = [parse_tuple_from_txt(x) for x in self.list_nodes]
 		
 		#connect the two layers
 		self.graph.update(self.block)
@@ -185,7 +190,7 @@ class TimeNetwork:
 
 	def get_swapping_edges(self):
 		'''
-		
+
 
 		Returns
 		-------

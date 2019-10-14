@@ -69,6 +69,8 @@ class MCFlow:
 				for i,j in self.arcs:
 					if solution[h,i,j] > 0:
 						print('%s -> %s: %g' % (i, j, solution[h,i,j]))
+		else:
+			print("model not optimized or failed to optimize \n please use .solve() and check the output")
 
 
 
@@ -259,3 +261,65 @@ class MCFlow:
 				(self.flow.sum('*',i,j) <= 1 for i,j in set_constraints), "swap")
 
 
+	def extract_paths(self):
+
+		#check if the model has a solution
+		if self.m.status == gurobipy.GRB.Status.OPTIMAL:
+			paths = {}
+
+			#get the solution
+			solution = self.m.getAttr('x', self.flow)
+
+			#get the path for each commodities
+			for k in self.commodities:
+				paths[k] = []
+				for i,j in self.arcs:
+					if solution[k,i,j] == 1:
+						if i.startswith("source"):
+							paths[k].insert(0,i)
+						elif j.startswith("sink"):
+							paths[k].append(j)
+
+						else:
+							time_i = int(i.split("_t")[-1])
+							time_j = int(j.split("_t")[-1])
+							if len(paths[k]) == 0:
+								if time_i < time_j:
+									paths[k].append(i)
+									paths[k].append(j)
+								else:
+									paths[k].append(j)
+									paths[k].append(i)
+							else:
+								if time_i < time_j:
+									paths[k].append(j)
+								else:
+									paths[k].append(i)
+										
+			return paths
+		else:
+			print("model not optimized or failed to optimize \n please use .solve() and check the output")
+			return {}
+
+	def check_no_collisions_solution(self,paths):
+		'''
+		check that no two paths use the same vertex at the same moment
+		
+		Parameters
+		----------
+		paths : [type]
+			[description]
+		
+		Returns
+		-------
+		[type]
+			[description]
+		'''
+		paths_list = []
+		for k,item in paths.items():
+			paths_list.append(item)
+
+		for elt in zip(*[n for n in paths_list]):
+			if len(elt) != len(set(elt)):
+				return False
+		return True
