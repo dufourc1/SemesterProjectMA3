@@ -5,122 +5,100 @@ import matplotlib.pyplot as plt
 class TimeNetwork:
 
 	'''
-	Time expanded network
+	Implementation of a time connected network
+
+	Examples
+	--------
+	\\>> graph = nx.complete_graph(100)
+
+	\\>> timeExpandedNetwork = TimeNetwork(graph)
+		# get the actual time expanded graph
+	\\>> graphTime = timeExpandedGraph.graph
 	'''
 
 
 	def __init__(self, 
-				graph_data = None,
+				graph_data,
 				depth = 1,
 				default_weight = 0,
 				default_capacity = 1e10, 
 				waiting_cost = 0, 
-				waiting_capacity = 1e6,
-				intermediate_weight = 0,
-				intermediate_capacity = 1,
-				flatland = True):
-		
+				waiting_capacity = 1e6):
+	
 
-		'''
-		[summary]
-		
-		Parameters
-		----------
-		incoming_graph_data : nx.DiGraph
-			[description]
-
-		default_weight : float, optional
-			[description], by default 0
-
-		default_capacity : float, optional
-			[description], by default 1e10
-		'''
+		if depth < 1:
+			print(f'IllegalArgumentWarning depth {depth} should be greater than 1, setting it to 1')
+			depth = 1
 
 
 		#reduce the nodes space by dropping from the graph the isolated vertices
 		incoming_graph_data = nx.DiGraph()
 		incoming_graph_data.add_edges_from(graph_data.edges)
 		incoming_graph_data.remove_nodes_from(list(nx.isolates(incoming_graph_data)))
-
+		
 		self.depth = depth
-		#the time expanded graph
 		self.graph = nx.DiGraph()
 
+
+		self.default_capacity = default_capacity
+		self.default_weight = default_weight
 		#the building block of the time expanded graph: one time step expansion + one intermediate layer
 		self.block = nx.DiGraph()
 		self.last_time_step = 0
 
 		#extract the nodes and build the first layer of the time expanded graph
-		self.basis_layer, self.list_nodes = self.build_base_layer(incoming_graph_data = incoming_graph_data,
+		self.block, self.list_nodes = self.build_base_layer(incoming_graph_data = incoming_graph_data,
 																	default_capacity = default_capacity,
 																	default_weight = default_weight,
 																	waiting_cost = waiting_cost,
-																	waiting_capacity = waiting_capacity,
-																	flatland = flatland)
+																	waiting_capacity = waiting_capacity)
 
 		#take the cell index for the flatland graph
-		self.liste_cells = [(int(x.split("_")[0][1]), int(x.split("_")[0][-2])) for x in self.list_nodes]
-		#build the intermediate layer
-		self.intermediate_layer = self.build_intermediate_layer(incoming_graph_data,
-																intermediate_weight,
-																intermediate_capacity,
-																flatland)
-
+		self.list_cells = [(int(x.split("_")[0][1]), int(x.split("_")[0][-2])) for x in self.list_nodes]
+		
 		#connect the two layers
-		self.block = self.connect_first_layers(flatland)
 		self.graph.update(self.block)
 
 
-		for i in range(depth):
-			self.build_new_depth_network(flatland)
+
+		for i in range(depth-1):
+			self.build_new_depth_network()
 
 
-		# self.connect_sources_and_sink()
+	def connect_sources_and_sink(self, sources, sinks):
 
+		if len(sources) != len(sinks):
+			raise ValueError("number of sources and sinks is different ! ")
+		for i,s in enumerate(sources):
+			if s not in self.list_cells:
+				raise ValueError(f'source for commodity {i}: {s} is not in the orginal graph')
+		for i,s in enumerate(sinks):
+			if s not in self.list_cells:
+				raise ValueError(f'sink for commodity {i}: {s} is not in the orginal graph')
 		
+		number_nodes = len(list(self.block.nodes))/2
+		for agent, (source,sink) in enumerate(zip(sources,sinks)):
+			source_name = "source_agent_"+str(agent)
+			sink_name = "sink_agent_"+str(agent)
+			self.graph.add_node(source_name,pos = [-5,i/10.+0.05])
+			self.graph.add_node(sink_name,pos = [number_nodes +5 ,i/10.+0.05])
+			for node in self.graph.nodes:
+				if node.startswith(str(source)) and 'out' in node and node.endswith("0") :
+					print(f'from source {node}')
+					self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
+				if node.startswith(str(sink)) and 'in' in node:
+					if not node.endswith("0"):
+						print(f"to the sink {node}")
+						self.graph.add_edge(node,sink_name, capacity = 1, weight = 0)
 
 
-	def connect_sources_and_sink(self):
-
-		raise NotImplementedError
 
 
 	def build_base_layer(self,incoming_graph_data, 
 						default_weight = 0, 
 						default_capacity = 1e6, 
 						waiting_cost = None,
-						waiting_capacity = None,
-						flatland = True):
-		'''
-		[summary]
-		
-		Parameters
-		----------
-		incoming_graph_data : nx.DiGraph, optional
-			[description], by default None
-			by default does not allow for self loop
-
-		t : int, optional
-			[description], by default 0
-
-		default_weight : float, optional
-			[description], by default 0
-
-		default_capacity : float, optional
-			[description], by default 1e6
-
-		waiting_cost : [type], optional
-			[description], by default None
-
-		waiting_capacity : [type], optional
-			[description], by default None
-
-
-		Returns
-		--------
-
-		basis_layer: nx.DiGraph
-		'''
+						waiting_capacity = None):
 
 		#keeping track of the layer
 		t = self.last_time_step
@@ -141,12 +119,7 @@ class TimeNetwork:
 
 			#keep track of the old name in the graph
 			old_name = node
-			if flatland:
-				cell_index = old_name.split("_")[0]
-				if cell_index not in list_nodes:
-					list_nodes.append(cell_index)
-			else:
-				list_nodes.append(str(old_name))
+			list_nodes.append(str(old_name))
 
 			#add the nodes for one time step
 			name_time_t = str(node)+"_t" + str(t)
@@ -182,112 +155,60 @@ class TimeNetwork:
 		self.last_time_step += 2
 		return basis_layer, list_nodes
 
-	def build_intermediate_layer(self,
-								incoming_graph_data,
-								intermediate_weight,
-								intermediate_capacity,
-								flatland):
-
-		inter_layer = nx.DiGraph()
-		for i,node in enumerate(self.list_nodes):
-			if flatland:
-				inter_layer.add_node(node+"_t"+str(self.last_time_step),pos = (2*i,self.last_time_step))
-			else:
-				inter_layer.add_node(node+"_t"+str(self.last_time_step),pos = (i,self.last_time_step))
-		self.last_time_step += 1
-
-		return inter_layer
-
-	def connect_first_layers(self,flatland = False):
-		'''
-		[summary]
-		
-		Returns
-		-------
-		[type]
-			[description]
-		'''
-
-		graph_inter = nx.DiGraph()
-		graph_inter.update(self.basis_layer)
-		graph_inter.update(self.intermediate_layer)
-		
-		#get the upper layer of the basislayer
-		time_stamps = set([int(x.split("_t")[-1]) for x in self.basis_layer.nodes])
-
-		nodes_to_connect_basis_layer = [node for node in self.basis_layer.nodes if int(node.split("_t")[-1])==max(time_stamps)]
-
-		for node in nodes_to_connect_basis_layer:
-
-			#get the true name of the node and the corresponding time step 
-			name_node,t = node.split("_t")
-			t = int(t)
-			if flatland:
-				if name_node.endswith("out"):
-					graph_inter.add_edge(node,name_node.split("_")[0] + "_t"+str(t+1), weight = 0, capacity = 1)
-			else:
-				graph_inter.add_edge(node,name_node + "_t"+str(t+1), weight = 0, capacity = 1)
 
 
-		return graph_inter
-
-
-	def build_new_depth_network(self,flatland = False):
+	def build_new_depth_network(self):
 
 		#get the new block to add with the updated name wrt to time stamp
 		layer_new = self.updated_name_block()
-
-		nodes_to_connect_basis_layer = [node for node in self.graph.nodes if int(node.split("_t")[-1])==self.last_time_step-1]
-		nodes_to_connect_new_layer = [node for node in layer_new.nodes if int(node.split("_t")[-1])==self.last_time_step]
-		nodes_to_connect_basis_layer.sort()
-		nodes_to_connect_new_layer.sort()
-
 		self.graph.update(layer_new)
 
-		if flatland:
-			for node_from in nodes_to_connect_basis_layer:
-				for node_to in nodes_to_connect_new_layer:
-					if node_to.split("_")[0] == node_from.split("_")[0] and node_to.split("_t")[0].endswith("in"):
-						self.graph.add_edge(node_from,node_to,weight = 0,capacity = 1)
-		else:
-			for node_from,node_to in zip(nodes_to_connect_basis_layer,nodes_to_connect_new_layer):
-				self.graph.add_edge(node_from,node_to,weight = 0,capacity = 1)
+		for edge in self.block.edges:
 
-		self.last_time_step += 3
+			#get the dictionnary with the relevant info from the original graph
+			data_edge = self.block[edge[0]][edge[1]]
+
+			new_data_edge = {}
+			if 'capacity' in data_edge.keys():
+				new_data_edge['capacity'] = data_edge['capacity']
+			else:
+				new_data_edge['capacity'] = self.default_capacity
+				
+			if 'weight' in data_edge.keys():
+				new_data_edge['weight'] = data_edge['weight']
+			else:
+				new_data_edge['weight'] = self.default_weight
+
+			#get the updated endpoints for the graph
+			old_name_node_from = edge[0].split("_t")[0]
+			old_name_node_to = edge[1].split("_t")[0]
+
+			new_name_node_from = old_name_node_from+"_t"+str(self.last_time_step-1)
+			new_name_node_to = old_name_node_to +"_t"+str(self.last_time_step)
+
+			self.graph.add_edges_from([(new_name_node_from,new_name_node_to)],**new_data_edge)
+
+		self.last_time_step += 1
 	
 
 
 	def updated_name_block(self):
-		layer = nx.relabel_nodes(self.block, lambda x: self.update_time_stamp_names(x,self.last_time_step))
-		for node in layer.nodes:
-			layer.node[node]['pos'] = (layer.node[node]['pos'][0],int(node.split("_t")[-1]))
+		layer_nodes = [self.update_time_stamp_names(x) for x in self.list_nodes]
+		layer = nx.DiGraph()
+		layer.add_nodes_from(layer_nodes)
+		for i,node in enumerate(layer.nodes):
+			layer.node[node]['pos'] = (i,int(node.split("_t")[-1]))
 		return layer
 
 
-	def update_time_stamp_names(self,name,t):
-		'''
-		update the time stamp on the name, replacing it by the time t
-		
-		Parameters
-		----------
-		name : [type]
-			[description]
-		t : [type]
-			[description]
-		
-		Returns
-		-------
-		[type]
-			[description]
-		'''
-		name_original = name.split("_t")[0]
-		t_original = int(name.split("_t")[-1])
-		name_updated = name_original + "_t" + str(t+t_original%3)
+	def update_time_stamp_names(self,name):
+		t = self.last_time_step
+		name_updated = name + "_t" + str(t)
 		return name_updated
 
 
 	def show(self, details = False):
-		largeur = min(len(list(self.basis_layer.nodes)),20)
+		largeur = min(len(list(self.block.nodes))/2,20)
 		longueur = min(int(3*(self.depth+1)),20)
 		plt.figure(figsize=(largeur,longueur))
 		pos=nx.get_node_attributes(self.graph,'pos')
