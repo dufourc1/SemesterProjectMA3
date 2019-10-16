@@ -292,9 +292,11 @@ class MCFlow:
 									paths[k].append(i)
 							else:
 								if time_i < time_j:
-									paths[k].append(j)
+									if j not in paths[k]:
+										paths[k].append(j)
 								else:
-									paths[k].append(i)
+									if i not in paths[k]:
+										paths[k].append(i)
 										
 			return paths
 		else:
