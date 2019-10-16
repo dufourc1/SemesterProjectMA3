@@ -73,6 +73,27 @@ class TimeNetwork:
 
 
 	def connect_sources_and_sink(self, sources, sinks):
+		'''
+		given a list of cells of sources and sinks,
+		connect them to the graph in the followin manner: the source is attached at time t=0,
+		while the sink is attached to all the time step > 1
+		
+		Parameters
+		----------
+		sources : list
+			list of sources, they should be in the same format as self.list_cells
+		sinks : list
+			list of sources, they should be in the same format as self.list_cells
+		
+		Raises
+		------
+		ValueError
+			if the length of the sources and the sinks differ
+		ValueError
+			if a source is not in self.list_cells
+		ValueError
+			if a sink is not in self.list_cells
+		'''
 
 		if len(sources) != len(sinks):
 			raise ValueError("number of sources and sinks is different ! ")
@@ -106,6 +127,23 @@ class TimeNetwork:
 						default_capacity = 1e6, 
 						waiting_cost = None,
 						waiting_capacity = None):
+		'''
+		build the base layer for the time expanded graph, add a copy of the node to graph and 
+		perform the connection between the time step 0 and the time step 1 
+		
+		Parameters
+		----------
+		incoming_graph_data : nx.Digraph
+			original graph
+		default_weight : int, optional
+			default weight for the edges in the graph, by default 0
+		default_capacity : int, optional
+			default capacity for the edges in the graph, by default 1e6
+		waiting_cost : int, optional
+			default weight for the edges allowing one to stay in place trough time, by default None
+		waiting_capacity : int, optional
+			defautl capacity for the waiting edges, by default None
+		'''
 
 		#keeping track of the layer
 		t = self.last_time_step
@@ -204,7 +242,9 @@ class TimeNetwork:
 
 
 	def build_new_depth_network(self):
-
+		'''
+		add one layer to the time expanded graph 
+		'''
 		#get the new block to add with the updated name wrt to time stamp
 		layer_new = self.updated_name_block()
 		self.graph.update(layer_new)
@@ -239,6 +279,9 @@ class TimeNetwork:
 
 
 	def updated_name_block(self):
+		'''
+		rename the original nodes by giving them an appropriate time step
+		'''
 		layer_nodes = [self.update_time_stamp_names(x) for x in self.list_nodes]
 		layer = nx.DiGraph()
 		layer.add_nodes_from(layer_nodes)
@@ -248,12 +291,23 @@ class TimeNetwork:
 
 
 	def update_time_stamp_names(self,name):
+		'''
+		update the time stamp of name 
+		'''
 		t = self.last_time_step
 		name_updated = name + "_t" + str(t)
 		return name_updated
 
 
 	def show(self, details = False):
+		'''
+		visualisation of the time expanded graph
+		
+		Parameters
+		----------
+		details : bool, optional
+			show names, weights, capacity on the graph, by default False
+		'''
 		largeur = min(len(list(self.block.nodes))/2,20)
 		longueur = min(int(3*(self.depth+1)),20)
 		plt.figure(figsize=(largeur,longueur))
