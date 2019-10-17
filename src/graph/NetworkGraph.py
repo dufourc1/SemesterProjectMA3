@@ -30,6 +30,15 @@ JITTER = {
 			'S_out':[2,1]
 }
 
+
+def parse_tuple_from_txt(tuple_str):
+    interest = tuple_str.split("_")[0]
+    interest_left = interest.split("(")[1].split(",")[0]
+    interest_right = interest.split(")")[0].split(",")[1]
+    return (int(interest_left),int(interest_right))
+
+
+
 class NetworkGraph(nx.DiGraph):
 	'''
 	implementation of the graph extracted from a flatland network
@@ -330,10 +339,9 @@ class NetworkGraph(nx.DiGraph):
 		'''
 		# print(node)
 		#get the cell index
-		name = node.split("_")[0].split(",")
+		cell_index = parse_tuple_from_txt(node)
 		#get the "port"
 		subname = "_".join(node.split("_")[-2:])
-		cell_index = (int(name[0][-1]),int(name[1][-2]))
 
 		#comput the position
 		position_node = (cell_index[0] - jitter*JITTER[subname][1], 
@@ -445,11 +453,18 @@ class SuperNode(nx.DiGraph):
 		'''
 		return out_direction != OPPOSITE_DIRECTION[in_direction]
 
-	def show(self):
+	def show(self, trajectories= None):
 		'''
 		pretty plotting of the internal nodes of the superNode
 		'''
 
+		if trajectories is not None:
+			raise NotImplementedError("implement this visu moron")
+		else:
+			for edge in self.edges:
+				# add color to edge (black by default)
+				raise NotImplementedError("implement this visu moron")
+			
 		pos = {}
 		labels = {}
 		#trick to add the proper nodes names
@@ -469,4 +484,5 @@ class SuperNode(nx.DiGraph):
 
 		nx.draw(self,**options)
 		plt.show()
+
 
