@@ -82,7 +82,7 @@ class NetworkGraph(nx.DiGraph):
 		'''
 		try:
 			cycles = nx.find_cycle(self)
-			print("cycles detected in NetworkGraph, this may be due to the fact that endpoint can be used to do 180 turn")
+			#print("cycles detected in NetworkGraph, this may be due to the fact that endpoint can be used to do 180 turn")
 		except(nx.NetworkXNoCycle):
 			pass
 		
@@ -200,6 +200,7 @@ class NetworkGraph(nx.DiGraph):
 			#actual connection
 			self.add_edge(superNode_from.name+"_"+connection_out,superNode_to.name +"_"+connection_in)
 		except:
+			#pass
 			print(f' warning on connections between {index1} and {index2}')
 				
 

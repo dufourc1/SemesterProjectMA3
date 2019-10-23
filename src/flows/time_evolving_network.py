@@ -27,7 +27,7 @@ class TimeNetwork:
 				depth = 1,
 				default_weight = 0,
 				default_capacity = 1, 
-				waiting_cost = 0, 
+				waiting_cost = 1, 
 				waiting_capacity = 1):
 	
 
@@ -310,7 +310,8 @@ class TimeNetwork:
 		'''
 		largeur = min(len(list(self.block.nodes))/2,20)
 		longueur = min(int(3*(self.depth+1)),20)
-		plt.figure(figsize=(largeur,longueur))
+		fig = plt.figure(figsize=(largeur,longueur))
+		plt.rcParams['axes.facecolor'] = '#2e3037'
 		pos=nx.get_node_attributes(self.graph,'pos')
 		nx.draw(self.graph,pos, with_labels = details)
 		weights = nx.get_edge_attributes(self.graph,'weight')

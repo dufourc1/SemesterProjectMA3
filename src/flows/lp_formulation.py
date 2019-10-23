@@ -261,6 +261,12 @@ class MCFlow:
 				(self.flow.sum('*',i,j) <= 1 for i,j in set_constraints), "swap")
 
 
+	def check_if_feasible(self):
+		'''
+		if run after self.solve(), return True if the model was solvable
+		'''
+		return self.m.status == gurobipy.GRB.Status.OPTIMAL
+
 	def extract_paths(self):
 
 		#check if the model has a solution
