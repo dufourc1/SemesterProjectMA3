@@ -179,7 +179,7 @@ def create_env(number_agents,width,height,n_start_goal,seed):
               height=height,
               rail_generator=complex_rail_generator(nr_start_goal=n_start_goal,
                                                     nr_extra=1,
-                                                    min_dist=8,
+                                                    min_dist=6,
                                                     max_dist=99999,
                                                     seed = seed),
               schedule_generator=complex_schedule_generator(),
