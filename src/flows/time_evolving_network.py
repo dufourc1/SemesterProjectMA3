@@ -69,7 +69,7 @@ class TimeNetwork:
 		for i in range(depth-1):
 			self.build_new_depth_network()
 
-		self.topology = self.get_topology_network()
+		self.topology = self.get_topology_network(graph_data)
 
 
 	def connect_sources_and_sink(self, sources, sinks):
@@ -117,7 +117,6 @@ class TimeNetwork:
 					if not node.endswith("0"):
 						self.graph.add_edge(node,sink_name, capacity = 1, weight = 0)
 		
-		self.topology = self.get_topology_network()
 
 
 
@@ -200,29 +199,22 @@ class TimeNetwork:
 		self.last_time_step += 2
 		return basis_layer, list_nodes
 
-	def get_topology_network(self):
+	def get_topology_network(self,graph):
 		'''
 		get the topology of the network
 		'''
-		topology_dict = {}
-		for cell in self.list_cells:
-			topology_dict[cell] = {}
-		for edge in self.graph.edges:
-			for key,item in topology_dict.items():
-				if edge[0].startswith(str(key)) and edge[1].startswith(str(key)):
-					if abs(int(edge[0].split("_t")[-1]) - int(edge[1].split("_t")[-1]))==1:
-						time = int(edge[0].split("_t")[-1])
-						if time in topology_dict[key].keys():
-							topology_dict[key][time].add(edge)
-						else:
-							topology_dict[key][time] = set()
-							topology_dict[key][time].add(edge)
-						break
-		
+
+
+		positionConstraints = graph.getPositionConstraints()
+		swappingConstraints = graph.getSwappingConstraints()
 		topology = []
-		for _, item in topology_dict.items():
-			for _,item2 in item.items():
-				topology.append(item2)
+
+		for i in range(self.last_time_step+1):
+			for c in positionConstraints:
+				c_time = set()
+				for edge in c:
+					c_time.add((edge[0]+"_t"+str(i),edge[1]+"_t"+str(i)))
+				topology.append(c_time)
 		
 		return topology
 

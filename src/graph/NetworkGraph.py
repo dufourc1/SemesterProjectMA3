@@ -48,12 +48,16 @@ class NetworkGraph(nx.DiGraph):
 
 		super().__init__()
 		self.superNodes = {}
+		self.position_constraints = []
+		self.swapping_constraints = {}
 		assert len(sources) == len(sinks), 'sources and sinks are supposed to have same lengths'
 		self.sources = sources
 		self.sinks = sinks
 		self.size = transition_matrix.shape
 		self.graph_connectivity = nx.DiGraph()
 		self.build(transition_matrix)
+		self.swapping_constraints_liste = [x for _,x in self.swapping_constraints.items()]
+		
 
 
 	def build(self,transition_matrix):
@@ -104,6 +108,7 @@ class NetworkGraph(nx.DiGraph):
 
 				#initialize the superNode corresponding to this cell
 				superNode = SuperNode(index,transition_dict)
+				self.position_constraints.append(superNode.get_constraints())
 				self.superNodes[index] = superNode
 						
 
@@ -196,9 +201,18 @@ class NetworkGraph(nx.DiGraph):
 			else:
 				raise ValueError(f"trying to connect the same superNode with itself {index1}")
 
+			edge = (superNode_from.name+"_"+connection_out,superNode_to.name +"_"+connection_in)
+
+			if (index1,index2) not in self.swapping_constraints.keys():
+				if (index2,index1) not in self.swapping_constraints.keys():
+					self.swapping_constraints[(index1,index2)] = [edge]
+				else:
+					self.swapping_constraints[(index2,index1)].append(edge)
+			else:
+				self.swapping_constraints[(index1,index2)] = [edge]
 
 			#actual connection
-			self.add_edge(superNode_from.name+"_"+connection_out,superNode_to.name +"_"+connection_in)
+			self.add_edge(*edge)
 		except:
 			#pass
 			print(f' warning on connections between {index1} and {index2}')
@@ -364,6 +378,11 @@ class NetworkGraph(nx.DiGraph):
 			plt.savefig(title)
 		plt.show()
 
+	def getPositionConstraints(self):
+		return self.position_constraints
+
+	def getSwappingConstraints(self):
+		return self.swapping_constraints_liste
 
 class SuperNode(nx.DiGraph):
 	'''
@@ -391,6 +410,7 @@ class SuperNode(nx.DiGraph):
 		super().__init__()
 		self.name = str(index)
 		self.index = index
+		self.constraints = []
 		
 		#constant defined if changes in the structure of the incoming matrix
 		self.in_suffix = '_in'
@@ -398,6 +418,7 @@ class SuperNode(nx.DiGraph):
 
 		self.add_nodes_from([self.name +"_"+ x for x in nodes])
 		self.add_edges_from_transition(transitions)
+		
 
 	def add_edges_from_transition(self,transitions):
 		'''
@@ -427,6 +448,7 @@ class SuperNode(nx.DiGraph):
 					node_arrival =self.name + "_" + out_direction + self.out_suffix
 
 					#add an edge between them
+					self.constraints.append((node_base,node_arrival))
 					self.add_edge(node_base,node_arrival)
 
 	def update_node_attribute(self,annotations):
@@ -486,4 +508,5 @@ class SuperNode(nx.DiGraph):
 		nx.draw(self,**options)
 		plt.show()
 
-
+	def get_constraints(self):
+		return self.constraints
