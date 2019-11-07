@@ -75,6 +75,9 @@ target/
 # Jupyter NB Checkpoints
 .ipynb_checkpoints/
 
+# temp folder
+*/temp/
+
 # exclude data from source control by default
 /data/
 
