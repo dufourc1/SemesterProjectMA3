@@ -48,7 +48,7 @@ class MCFlow:
 		self.m = gurobipy.Model('netflow')
 
 		#create the variables 
-		self.flow = self.m.addVars(self.commodities, self.arcs, obj = self.cost, name = 'flow')
+		self.flow = self.m.addVars(self.commodities, self.arcs, obj = self.cost, name = 'flow',vtype=gurobipy.GRB.BINARY)
 
 		#add the constraint to the model
 		self.__add_constraints(topology)
