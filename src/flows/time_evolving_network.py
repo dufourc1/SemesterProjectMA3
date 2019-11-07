@@ -229,12 +229,10 @@ class TimeNetwork:
 
 				topology_position[i][cell] = c_time
 
-
-			for c in swappingConstraints:
+			for cell,c in swappingConstraints.items():
 				c_time = set()
-				for cell,c in positionConstraints.items():
-					for edge in c:
-						c_time.add((edge[0]+"_t"+str(i),edge[1]+"_t"+str(i+1)))
+				for edge in c:
+					c_time.add((edge[0]+"_t"+str(i),edge[1]+"_t"+str(i+1)))
 				topology_swapping[i][cell] = c_time
 		
 		

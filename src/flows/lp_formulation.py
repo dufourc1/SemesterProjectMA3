@@ -275,7 +275,7 @@ class MCFlow:
 		'''
 
 		#check if the model has a solution
-		if self.m.status == gurobipy.GRB.Status.OPTIMAL:
+		if self.__check_if_feasible():
 			paths = {}
 
 			#get the solution
