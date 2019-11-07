@@ -48,7 +48,7 @@ class NetworkGraph(nx.DiGraph):
 
 		super().__init__()
 		self.superNodes = {}
-		self.position_constraints = []
+		self.position_constraints = {}
 		self.swapping_constraints = {}
 		assert len(sources) == len(sinks), 'sources and sinks are supposed to have same lengths'
 		self.sources = sources
@@ -56,7 +56,7 @@ class NetworkGraph(nx.DiGraph):
 		self.size = transition_matrix.shape
 		self.graph_connectivity = nx.DiGraph()
 		self.build(transition_matrix)
-		self.swapping_constraints_liste = [x for _,x in self.swapping_constraints.items()]
+		
 		
 
 
@@ -108,7 +108,7 @@ class NetworkGraph(nx.DiGraph):
 
 				#initialize the superNode corresponding to this cell
 				superNode = SuperNode(index,transition_dict)
-				self.position_constraints.append(superNode.get_constraints())
+				self.position_constraints[superNode.name] = superNode.get_constraints()
 				self.superNodes[index] = superNode
 						
 
@@ -202,6 +202,9 @@ class NetworkGraph(nx.DiGraph):
 				raise ValueError(f"trying to connect the same superNode with itself {index1}")
 
 			edge = (superNode_from.name+"_"+connection_out,superNode_to.name +"_"+connection_in)
+
+			#add incoming edge to the position constraints
+			self.position_constraints[superNode_to.name].append(edge)
 
 			if (index1,index2) not in self.swapping_constraints.keys():
 				if (index2,index1) not in self.swapping_constraints.keys():
@@ -382,7 +385,7 @@ class NetworkGraph(nx.DiGraph):
 		return self.position_constraints
 
 	def getSwappingConstraints(self):
-		return self.swapping_constraints_liste
+		return self.swapping_constraints
 
 class SuperNode(nx.DiGraph):
 	'''

@@ -45,6 +45,9 @@ class TimeNetwork:
 		self.graph = nx.DiGraph()
 
 
+		self.topology_position = {}
+		self.topology_swapping = {}
+
 		self.default_capacity = default_capacity
 		self.default_weight = default_weight
 		#the building block of the time expanded graph: one time step expansion + one intermediate layer
@@ -69,7 +72,7 @@ class TimeNetwork:
 		for i in range(depth-1):
 			self.build_new_depth_network()
 
-		self.topology = self.get_topology_network(graph_data)
+		self.compute_topology_network(graph_data)
 
 
 	def connect_sources_and_sink(self, sources, sinks):
@@ -111,11 +114,12 @@ class TimeNetwork:
 			self.graph.add_node(source_name,pos = [agent,-1])
 			self.graph.add_node(sink_name,pos = [number_nodes +5 ,agent+0.2])
 			for node in self.graph.nodes:
+
 				if node.startswith(str(source)) and 'out' in node and node.endswith("t0") :
 					self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
-				if node.startswith(str(sink)) and 'in' in node:
-					if not node.endswith("0"):
-						self.graph.add_edge(node,sink_name, capacity = 1, weight = 0)
+
+				if node.startswith(str(sink)) and 'in' in node and not node.endswith("t0"):
+					self.graph.add_edge(node,sink_name, capacity = 1, weight = 0)
 		
 
 
@@ -199,7 +203,7 @@ class TimeNetwork:
 		self.last_time_step += 2
 		return basis_layer, list_nodes
 
-	def get_topology_network(self,graph):
+	def compute_topology_network(self,graph):
 		'''
 		get the topology of the network
 		'''
@@ -207,30 +211,47 @@ class TimeNetwork:
 
 		positionConstraints = graph.getPositionConstraints()
 		swappingConstraints = graph.getSwappingConstraints()
-		topology = []
+		topology_position = {}
+		topology_swapping = {}
 
-		for i in range(self.last_time_step+1):
-			for c in positionConstraints:
+		for i in range(self.last_time_step-1):
+			topology_position[i] = {}
+			topology_swapping[i] = {}
+			for cell,c in positionConstraints.items():
 				c_time = set()
 				for edge in c:
-					c_time.add((edge[0]+"_t"+str(i),edge[1]+"_t"+str(i)))
-				topology.append(c_time)
+					#transitions 
+					c_time.add((edge[0]+"_t"+str(i),edge[1]+"_t"+str(i+1)))
+					#stay in place
+					if edge[0].split("_")[0] == edge[1].split("_")[0]:
+						c_time.add((edge[0]+"_t"+str(i),edge[0]+"_t"+str(i+1)))
+						c_time.add((edge[1]+"_t"+str(i),edge[1]+"_t"+str(i+1)))
+
+				topology_position[i][cell] = c_time
+
+
+			for c in swappingConstraints:
+				c_time = set()
+				for cell,c in positionConstraints.items():
+					for edge in c:
+						c_time.add((edge[0]+"_t"+str(i),edge[1]+"_t"+str(i+1)))
+				topology_swapping[i][cell] = c_time
 		
-		return topology
-
-	def get_swapping_edges(self):
-		'''
-
-
-		Returns
-		-------
-		swapping_edges : list of set
-			list of disjoint set, each set contains all the possible ways to go from cell1 to cell2 and vice-versa
-		'''
-		raise NotImplementedError
+		
+		self.topology_position = topology_position
+		self.topology_swapping = topology_swapping
 
 
-
+	def get_topology_network(self):
+		topology_liste = []
+		for time,constraint in self.topology_position.items():
+			for cell, pairs in constraint.items():
+				topology_liste.append(set(pairs))
+		for time,constraint in self.topology_swapping.items():
+			for cell, pairs in constraint.items():
+				topology_liste.append(set(pairs))
+		
+		return topology_liste
 
 
 	def build_new_depth_network(self):

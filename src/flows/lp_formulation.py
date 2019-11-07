@@ -2,6 +2,8 @@ import gurobipy
 import numpy as np
 import networkx as nx
 import copy
+from tqdm import tqdm
+import time
 
 class MCFlow:
 
@@ -231,11 +233,12 @@ class MCFlow:
 		self.m.addConstrs(
 			(self.flow.sum(k,'*',j) + self.inflow[k,j] == self.flow.sum(k,j,'*')
 			for k in self.commodities for j in self.nodes), "flow")
+		
 		# Alternate version:
 		# m.addConstrs(
-		#   (quicksum(flow[h,i,j] for i,j in arcs.select('*',j)) + inflow[h,j] ==
-		#     quicksum(flow[h,j,k] for j,k in arcs.select(j,'*'))
-		#     for h in commodities for j in nodes), "node")
+		#    (quicksum(flow[h,i,j] for i,j in arcs.select('*',j)) + inflow[h,j] ==
+		#      quicksum(flow[h,j,k] for j,k in arcs.select(j,'*'))
+		#      for h in commodities for j in nodes), "node")
 
 	def __add_topology_constraints(self,topology):
 		'''
@@ -249,23 +252,11 @@ class MCFlow:
 			list of disjoint set representing the relation (topology) between the nodes
 		'''
 		
-		for set_constraints in topology:
-			self.m.addConstrs(
-				(self.flow.sum('*',i,j) <= 1 for i,j in set_constraints), "topo")
-
-	def add_swapping_constraints(self,swapping_edges):
-		'''
-		addd constraint to avoid swapping of flows from one topology to another
 		
-		Parameters
-		----------
-		swapping_edges : list of set
-			list of disjoint set, each set contains all the possible ways to go from cell1 to cell2 and vice-versa
-		'''
-		for set_constraints in swapping_edges:
-			self.m.addConstrs(
-				(self.flow.sum('*',i,j) <= 1 for i,j in set_constraints), "swap")
-
+		#for i,set_constraints in enumerate(topology):
+		self.m.addConstrs((gurobipy.quicksum(self.flow[h,i,j] for i,j in topology[i] for h in self.commodities) <= 1  for i in range(len(topology))  ) ,"topo")
+			
+	
 
 	def __check_if_feasible(self):
 		'''
@@ -296,27 +287,34 @@ class MCFlow:
 				for i,j in self.arcs:
 					if solution[k,i,j] == 1:
 						if i.startswith("source"):
-							paths[k].insert(0,i)
+						 	paths[k].append(j)
 						elif j.startswith("sink"):
-							paths[k].append(j)
-
+						 	paths[k].append(i)
 						else:
-							time_i = int(i.split("_t")[-1])
-							time_j = int(j.split("_t")[-1])
-							if len(paths[k]) == 0:
-								if time_i < time_j:
-									paths[k].append(i)
-									paths[k].append(j)
-								else:
-									paths[k].append(j)
-									paths[k].append(i)
-							else:
-								if time_i < time_j:
-									if j not in paths[k]:
-										paths[k].append(j)
-								else:
-									if i not in paths[k]:
-										paths[k].append(i)
+							paths[k].append(i)
+							paths[k].append(j)
+						
+
+					elif solution[k,i,j] != 0:
+						print("Warning, solution is NOT integral ! ")
+
+			for k,path in paths.items():
+				path.sort(key=lambda x: int(x.split("_t")[-1]))
+				one_endpoint_seen = {}
+				clean_path = []
+				for elt in path:
+					if elt not in one_endpoint_seen.keys():
+						one_endpoint_seen[elt] = True
+						clean_path.append(elt)
+					else:
+						if not one_endpoint_seen[elt]:
+							clean_path.append(elt)
+						one_endpoint_seen[elt] = not one_endpoint_seen[elt]
+
+
+				paths[k] = clean_path
+
+
 			
 										
 			return paths
@@ -327,7 +325,7 @@ class MCFlow:
 
 	def __translate_path_to_cell_coordinate(self, paths_old):
 		'''
-		translate the paths in term of internal representtion to a sequence of cell coordinate 
+		translate the paths in term of internal representation to a sequence of cell coordinate 
 		
 		Parameters
 		----------
