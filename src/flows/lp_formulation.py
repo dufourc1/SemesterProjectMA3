@@ -7,7 +7,7 @@ import time
 
 class MCFlow:
 
-	def __init__(self, graph,numberOfCommodities, topology):
+	def __init__(self, graph,numberOfCommodities, topology, integer = True):
 		'''
 		build the gurobipy models and add the constraints specified in self.__add_constraints()
 		
@@ -48,7 +48,10 @@ class MCFlow:
 		self.m = gurobipy.Model('netflow')
 
 		#create the variables 
-		self.flow = self.m.addVars(self.commodities, self.arcs, obj = self.cost, name = 'flow',vtype=gurobipy.GRB.BINARY)
+		if integer:
+			self.flow = self.m.addVars(self.commodities, self.arcs, obj = self.cost, name = 'flow',vtype=gurobipy.GRB.BINARY)
+		else:
+			self.flow = self.m.addVars(self.commodities, self.arcs, obj = self.cost, name = 'flow')
 
 		#add the constraint to the model
 		self.__add_constraints(topology)
@@ -295,8 +298,7 @@ class MCFlow:
 							paths[k].append(j)
 						
 
-					elif solution[k,i,j] != 0:
-						print("Warning, solution is NOT integral ! ")
+			
 
 			for k,path in paths.items():
 				path.sort(key=lambda x: int(x.split("_t")[-1]))
@@ -377,7 +379,7 @@ class MCFlow:
 			if len(elt) != len(set(elt)):
 				print(f"collision detected at time {i} : {elt}")
 				collision = False
-		if not collision: print("no collision detected")
+		if  collision: print("no collision detected")
 		return collision
 
 
