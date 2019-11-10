@@ -25,6 +25,9 @@ class MCFlow:
 
 		topology: list of set of edges of the original graph
 			additional constraints, put an empty list of not wanted
+
+		integer:
+			force solution to be integral (Integer Programming)
 		'''
 
 		#extract the graph from the time evolving network
