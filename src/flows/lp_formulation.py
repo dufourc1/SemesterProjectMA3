@@ -209,7 +209,7 @@ class MCFlow:
 			this set of the flow will be smaller than 1
 		'''
 		# Arc-capacity constraints
-		self.__add_capacity_constraints()
+		# self.__add_capacity_constraints()
 
 		# Flow-conservation constraints
 		self.__add_flow_conservation_constraints()
