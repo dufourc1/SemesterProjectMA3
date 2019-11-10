@@ -30,6 +30,7 @@ JITTER = {
 			'S_out':[2,1]
 }
 
+COLORS = ['b','g','r','c','m','y']
 
 def parse_tuple_from_txt(tuple_str):
     interest = tuple_str.split("_")[0]
@@ -43,6 +44,7 @@ class NetworkGraph(nx.DiGraph):
 	'''
 	implementation of the graph extracted from a flatland network
 	'''
+	
 
 	def __init__(self, transition_matrix,sources = [],sinks = []):
 
@@ -369,14 +371,22 @@ class NetworkGraph(nx.DiGraph):
 		return (position_node[1],-position_node[0])
 
 
-	def show(self, jitter = 0.1, title = None):		
+	def show(self, jitter = 0.1, title = None, paths = None):	
 		'''
 		pretty plotting of the network graph
 		'''
 		plt.figure(figsize=(50,50))
 		node_color = 'steel_blue'
 		pos = dict( (n, self.position(n, jitter)) for n in self.nodes() )
-		nx.draw(self ,pos,with_labels = False, node_size=50)
+		if paths is None:
+			nx.draw(self ,pos,with_labels = False, node_size=50)
+		else:
+			nx.draw(self ,pos,with_labels = False, node_size=1)
+		if paths is not None:
+			for agent,path in paths.items():
+				nx.draw_networkx_edges(self, pos,
+						edgelist=[(x[0].split("_t")[0],x[1].split("_t")[0]) for x in path],
+						width=10, alpha=1, edge_color=COLORS[int(agent)])
 		if title is not None:
 			plt.savefig(title)
 		plt.show()

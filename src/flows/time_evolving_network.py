@@ -7,6 +7,10 @@ def parse_tuple_from_txt(tuple_str):
     interest_right = interest.split(")")[0].split(",")[1]
     return (int(interest_left),int(interest_right))
 
+
+COLORS = ['b','g','r','c','m','y']
+
+
 class TimeNetwork:
 
 	'''
@@ -310,7 +314,7 @@ class TimeNetwork:
 		return name_updated
 
 
-	def show(self, details = False):
+	def show(self, details = False, paths = None):
 		'''
 		visualisation of the time expanded graph
 		
@@ -331,4 +335,10 @@ class TimeNetwork:
 		if details:
 			for key in weights.keys():
 				labels[key] = (weights[key],capacities[key])
+
+		if paths is not None:
+			for agent,path in paths.items():
+				nx.draw_networkx_edges(self, pos,
+						edgelist=path,
+						width=10, alpha=1, edge_color=COLORS[int(agent)])
 		_ = nx.draw_networkx_edge_labels(self.graph,pos,edge_labels=labels)

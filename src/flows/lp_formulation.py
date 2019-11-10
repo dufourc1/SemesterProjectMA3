@@ -61,6 +61,7 @@ class MCFlow:
 
 		self.solution = None
 		self.solution_complete = None
+		self.solution_complete_edges = {}
 
 
 	
@@ -290,6 +291,7 @@ class MCFlow:
 			#get the path for each commodities
 			for k in self.commodities:
 				paths[k] = []
+				self.solution_complete_edges[k] = []
 				for i,j in self.arcs:
 					if solution[k,i,j] == 1:
 						if i.startswith("source"):
@@ -297,11 +299,11 @@ class MCFlow:
 						elif j.startswith("sink"):
 						 	paths[k].append(i)
 						else:
+							self.solution_complete_edges[k].append((i,j))
 							paths[k].append(i)
 							paths[k].append(j)
 						
 
-			
 
 			for k,path in paths.items():
 				path.sort(key=lambda x: int(x.split("_t")[-1]))
