@@ -9,6 +9,7 @@ def parse_tuple_from_txt(tuple_str):
 
 
 COLORS = ['b','g','r','c','m','y']
+ORIENTATION_INBOUND = {0:"South",1:"West",2:"Norh",3:"South"}
 
 
 class TimeNetwork:
@@ -79,7 +80,7 @@ class TimeNetwork:
 		self.compute_topology_network(graph_data)
 
 
-	def connect_sources_and_sink(self, sources, sinks):
+	def connect_sources_and_sink(self, sources, sinks, directions = None):
 		'''
 		given a list of cells of sources and sinks,
 		connect them to the graph in the followin manner: the source is attached at time t=0,
@@ -120,7 +121,11 @@ class TimeNetwork:
 			for node in self.graph.nodes:
 
 				if node.startswith(str(source)) and 'out' in node and node.endswith("t0") :
-					self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
+					if directions is None:
+						self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
+					else:
+						if ORIENTATION_INBOUND[directions[agent]] in node:
+							self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
 
 				if node.startswith(str(sink)) and 'in' in node and not node.endswith("t0"):
 					self.graph.add_edge(node,sink_name, capacity = 1, weight = 0)
