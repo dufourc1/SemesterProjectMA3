@@ -9,7 +9,7 @@ def parse_tuple_from_txt(tuple_str):
 
 
 COLORS = ['b','g','r','c','m','y']
-ORIENTATION_INBOUND = {0:"South",1:"West",2:"Norh",3:"South"}
+ORIENTATION_INBOUND = {0:"N",1:"E",2:"S",3:"W"}
 
 
 class TimeNetwork:
@@ -120,7 +120,7 @@ class TimeNetwork:
 			self.graph.add_node(sink_name,pos = [number_nodes +5 ,agent+0.2])
 			for node in self.graph.nodes:
 
-				if node.startswith(str(source)) and 'out' in node and node.endswith("t0") :
+				if node.startswith(str(source)) and "out" in node and  node.endswith("t0") :
 					if directions is None:
 						self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
 					else:
