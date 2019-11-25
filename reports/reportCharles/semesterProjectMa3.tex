@@ -69,8 +69,8 @@
 
 
 %to hide the todos or to show them
-%\usepackage[colorinlistoftodos,prependcaption,obeyDraft]{todonotes}
-\usepackage[colorinlistoftodos,prependcaption]{todonotes}
+\usepackage[colorinlistoftodos,prependcaption,obeyDraft]{todonotes}
+%\usepackage[colorinlistoftodos,prependcaption]{todonotes}
 
 
 \usepackage{xargs}                      % Use more than one optional parameter in a new commands
@@ -200,6 +200,22 @@ Presentation of the challenge that serves as experimental ground.
 
 The transition network is an oriented graph $G = (V,A)$ that represents the original 2D grid world.
 
+\begin{figure}[h]
+	\begin{minipage}{0.475\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{img/firstgraph2Dworld.png}
+		\label{fig:env}
+		\vspace{0cm}
+		\caption{Flatland environment example. Randomly generated $7\times 7$ grid with 3 trains.}
+	\end{minipage}
+	\hfill
+	\begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{img/first_graph.png}
+		\caption{transition graph extracted from the flatland environment on the left.}
+	\end{minipage}
+\end{figure}
+
 \subsection{Time expanded network}
 \label{ten}
 We give a definition inspired from \cite[p.~19]{Skutella2008AnIT}:
@@ -296,7 +312,7 @@ This formulation is clear and intuitive: for each commodity we decide whether or
 \subsubsection{Relaxation and approximation}
 
 We first relax \eqref{eq:arcFlow} by allowing $x_{ij}^k \geq 0$ while letting the other constraints untouched. 
-Once we have a solution of this relaxed formulation, we use it as follows:\todo[inline]{see notebook}
+
 
 
 \subsection{Column generation method}
@@ -320,7 +336,7 @@ For this section we will restate our problem using path flows instead of arc flo
 With: 
 \begin{itemize}
 	\item $\mathcal{P} = \{\mathcal{P}_1,\ldots,\mathcal{P}_K\}$ and $\mathcal{P}_i$ is all the possible distinct paths between $s_i$ and $t_i$.
-	\item $\mathcal{P}_S = {P \in \mathcal{P}: |P\cap S| > 0 }$.
+	\item $\mathcal{P}_S = {P \in \mathcal{P}: |P\cap S| > 0 }$. This represents the paths that "go trough" the constraint $S$.
 \end{itemize}
 
 The second constraint $\sum_{P \in P^k} f(P) = 1$ contains in our case the fact that we need to have exactly one train going from $s_k$ to $t_k$ for each commodity.
@@ -330,7 +346,7 @@ The dual of the primal formulation (\ref{eq:pathFormulationPrimal}) is:
 
 \begin{equation}
 \begin{array}{ll@{}ll}
-\text{maximize}  & \displaystyle\sum\limits_{S \in C_S} &-y_S  +\displaystyle\sum\limits_{i=1}^{K}\sigma_i &\\
+\text{maximize}  & -\displaystyle\sum\limits_{S \in C_S} &y_S  +\displaystyle\sum\limits_{i=1}^{K}\sigma_i &\\
 \text{subject to}& \displaystyle\sum\limits_{S \in C_S}   &\delta_P(S)\cdot y_S + \sigma_k \leq |P|,  &\forall P \in \mathcal{P}\\
 &                                                &y \geq 0, &y \in \mathbb{R}^{|C_S|} \\
 & 												 & &\sigma \in \mathbb{R}^K\\
@@ -369,7 +385,7 @@ We can then derive the same complementary slackness conditions.
 	 To show the other two conditions, we will write the primal and dual expression in matrix form.
 	 
 	 \paragraph{Primal}
-	 \begin{equation}
+	 \begin{equation*}
 	 	\begin{array}{ll@{}ll}
 	 \text{minimize}  &b^T f(\mathcal{P})  \\
 	 \\
@@ -379,7 +395,7 @@ We can then derive the same complementary slackness conditions.
 	                                          &f(\mathcal{P}) \geq 0
 	 \end{array}
 	 \label{eq:matrixformprimal}
-	 \end{equation}
+	 \end{equation*}
 	 
 	 With: 
 	 \begin{itemize}
@@ -392,7 +408,7 @@ We can then derive the same complementary slackness conditions.
 
  
  \paragraph{Dual}
- \begin{equation}
+ \begin{equation*}
  \begin{array}{ll@{}ll}
  \text{maximize}  &\left( \begin{matrix} -1_{|C_S|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y}   \\
  \\
@@ -402,9 +418,9 @@ We can then derive the same complementary slackness conditions.
  &\tilde{y} \geq 0
  \end{array}
  \label{eq:matrixformdual}
- \end{equation}
+ \end{equation*}
  
- Where $\tilde{y} =\left( \begin{matrix} y \\ \tilde{\sigma_1} \\ \tilde{\sigma_2}  \end{matrix} \right) $ with $y \in \mathbb{R}^{|C_S|}$  and $\tilde{\sigma_1} + \tilde{\sigma_2} = \sigma \in \mathbb{R}^{K}$, with $y,\sigma$ being as in formulation \eqref{eq:pathFormulationDual}.
+ Where $\tilde{y} =\left( \begin{matrix} y \\ \tilde{\sigma_1} \\ \tilde{\sigma_2}  \end{matrix} \right) $ with $y \in \mathbb{R}^{|C_S|}$  and $\tilde{\sigma_1} + \tilde{\sigma_2} = \sigma \in \mathbb{R}^{K}$, with $y,\sigma$ being as \eqref{eq:pathFormulationDual}.
 
  
  Then we rewrite the conditions \eqref{eq:cond1} and \eqref{eq:cond3} in matrix form:
@@ -440,6 +456,31 @@ The other direction is quite similar but works in the opposite way we just did.
 With the above formulation, \todo{add numbers} we reduced the number of constraints but increased the number of variables. 
 
 We then proceed to define a \emph{reduced master LP} on a reduced number of paths variables that can be increased if necessary to attain an optimal solution.
+
+
+\paragraph{Initial Solution}
+We produce an initial feasible solution using a greedy algorithm.\\
+
+
+\begin{algorithm}[H]
+	\SetAlgoLined
+	\KwResult{ $\{p_1^0,\ldots,p_K^0 \}$, where $p_k^0$ is a path from $s_k$ to $t_k$}
+	pathsFeasible $= \{ \}$\;
+	
+	\For{$k \in \{1,\ldots,K\}$}{
+		find shortest path candidate $\tilde{p}$ from $s_k$ to $t_k$ using Dijkstra's algorithm.\\
+		\If{$ \tilde{p}$ does not have any conflicts with pathsFeasible}{add $\tilde{p}$ to pathsFeasible.\\}
+		\Else{Delete the edges of $\tilde{p}$ from the graph.\\
+		Goto 3.\\}
+	}
+
+	\caption{Finding and initial feasible solution for the column generation method}
+\end{algorithm}
+
+$ $\\
+
+Where we say that a path $p^*$ does not have conflicts with a set of paths $P$ if using formulation \eqref{eq:pathFormulationPrimal} and putting all $f(p) = 1 \quad \forall p\in P \cup \{p^*\}$ all the constraints are respected.
+
 
 \paragraph{Pricing problem}
 Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. 
@@ -479,9 +520,9 @@ But we have to keep in mind that the weights $\tilde{w}_{ij}$ can be negative! W
 \subsubsection{Relaxation and approximation}
 
 Once we solved the problem above, we do not have an integral multicommodity flow, hence the solution is not feasible. In order to get a feasible solution from the fractional flow, we use the   following approximations:
-\todo[inline]{see notebook}
+
 \idea[inline]{fill path one by one in decreasing order of flow or just branch and bound}
-\todo[inline]{see cs361b-notes.pdf and notebook}
+
 
 
 \newpage
