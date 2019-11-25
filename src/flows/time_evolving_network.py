@@ -102,7 +102,7 @@ class TimeNetwork:
 		ValueError
 			if a sink is not in self.list_cells
 		'''
-
+		numbersConnection = 0
 		if len(sources) != len(sinks):
 			raise ValueError("number of sources and sinks is different ! ")
 		for i,s in enumerate(sources):
@@ -123,13 +123,16 @@ class TimeNetwork:
 				if node.startswith(str(source)) and "out" in node and  node.endswith("t0") :
 					if directions is None:
 						self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
+						numbersConnection += 1
 					else:
 						if ORIENTATION_INBOUND[directions[agent]] in node:
 							self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
+							numbersConnection += 1
 
 				if node.startswith(str(sink)) and 'in' in node and not node.endswith("t0"):
 					self.graph.add_edge(node,sink_name, capacity = 1, weight = 0)
-		
+		if numbersConnection < len(sources):
+			print("Error, not all sources were connected")		
 
 
 
