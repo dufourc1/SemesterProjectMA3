@@ -21,6 +21,7 @@ class PricingSolver:
 
 		for i,s,t in enumerate(zip(self.sources,self.targets)):
 			#get the sigma dual variables from the array
+			
 			#TODO check if correct
 			sigma = dualVariables[-len(self.sources)+i]
 

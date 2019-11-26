@@ -3,13 +3,15 @@ import gurobipy
 
 class MasterProblem:
 
-	def __init__(self,initialSolution):
+	def __init__(self,initialSolution, constraints,findConstraints):
 		self.model = gurobipy.Model("MasterProblem")
-		self.columns = {}
-		for i, path in initialSolution:
-			self.columns[i] = path
-		raise NotImplementedError()
+		self.commodity = {}
+		for i, path in initialSolution.items():
+			self.commodity[i] = [path]
 
+		self.constraints = constraints
+		self.findConstraints_edges = findConstraints
+		self.findConstraints_path, self.findPath_constraint = self.__Link_path_to_constraints()
 	
 	def build(self):
 		self.generateVariables()
@@ -19,11 +21,16 @@ class MasterProblem:
 
 
 	def generateVariables(self):
+		#we add one variable per path for each commodity
+		for commodity,paths in self.commodity.items():
+			for i,path in enumerate(paths):
+				self.pathVars = self.model.addVar(obj = len(path), vtype = gurobipy.GRB.INTEGER,name = f'path {i} for commodity {commodity}')
 
-		raise NotImplementedError()
 
 	def generateConstraints(self):
-		raise NotImplementedError()
+		for restriction in self.constraints:
+			for path in self.findPath_constraint[restriction]:
+				raise NotImplementedError()
 
 	def generateObjective(self):
 		raise NotImplementedError()
@@ -45,6 +52,12 @@ class MasterProblem:
 		return self.relaxedModel.getAttr("Pi", self.model.getConstrs())
 
 
-
 	def addColumn(self):
+		raise NotImplementedError()
+
+
+	def __Link_path_to_constraints(self):
+		'''
+		Build a dict linking a path to the constraints it goes trough
+		'''
 		raise NotImplementedError()
