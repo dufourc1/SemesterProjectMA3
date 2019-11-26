@@ -112,14 +112,21 @@ class TimeNetwork:
 			if s not in self.list_cells:
 				raise ValueError(f'sink for commodity {i}: {s} is not in the orginal graph')
 		
+
 		number_nodes = len(list(self.block.nodes))/2
+
 		for agent, (source,sink) in enumerate(zip(sources,sinks)):
-			source_name = "source_agent_"+str(agent)
-			sink_name = "sink_agent_"+str(agent)
+
+			#define node names
+			source_name = "source_"+str(agent)
+			sink_name = "sink_"+str(agent)
+
+			#add the nodes to the graph
 			self.graph.add_node(source_name,pos = [agent,-1])
 			self.graph.add_node(sink_name,pos = [number_nodes +5 ,agent+0.2])
-			for node in self.graph.nodes:
 
+			#connect the source and sink nodes
+			for node in self.graph.nodes:
 				if node.startswith(str(source)) and "out" in node and  node.endswith("t0") :
 					if directions is None:
 						self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
