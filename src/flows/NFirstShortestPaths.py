@@ -12,6 +12,10 @@ class PathFinder:
 		#put a weight of one on all the edges in the graph
 		nx.set_edge_attributes(self.graph,1,"weight")
 
+	def reset_weights(self):
+		nx.set_edge_attributes(self.graph,1,"weight")
+
+
 	def findShortestPaths(self,source,target,n):
 		
 		paths = []

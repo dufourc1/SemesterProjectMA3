@@ -177,9 +177,9 @@ Jonas Racine
 
 
 \pagenumbering{arabic}
-\section*{Introduction}
-\addcontentsline{toc}{section}{Introduction}
-Presentation of the challenge that serves as experimental ground.
+\section{Introduction}
+
+
 
 %\begin{figure}[H]
 %\centering
@@ -189,6 +189,10 @@ Presentation of the challenge that serves as experimental ground.
 
 
 \newpage
+\section{Flatland challenge}
+
+\newpage
+
 \section{Literature review}
 \subsection{Double vertex graph}
 \subsection{MAPF}
@@ -252,9 +256,9 @@ We then proceed to define a time step, which represent what would be added to a 
 	There are no cycles in the time expanded network since $\nexists (v_\theta,w_{\tilde{\theta}}) \in E^T$ with $\tilde{\theta} < \theta$.
 \end{remark}
 	
-\subsection{Constraints}
-\label{sec:constraints}
-Needs to define $C_S$ in term of trains movements and then in term of arcs flow and explain why there only span one time step.
+\subsection{Restrictions}
+\label{sec:restrictions}
+Needs to define $C_R$ in term of trains movements and then in term of arcs flow and explain why there only span one time step.
 
 
 
@@ -263,12 +267,12 @@ Needs to define $C_S$ in term of trains movements and then in term of arcs flow 
 
 We now consider the time expanded network defined in section \ref*{ten} and denote it by $G = (V,A)$. The trains will be the commodities, we suppose that we have $K$ of them.
 
-We now formalize the definition of constraint as described in section \ref*{sec:constraints}.
+We now formalize the definition of restriction as described in section \ref*{sec:restrictions}.
 
 \begin{madef}
-	A constraint $S$ over a time expanded network $G = (V,A)$ is a set of arcs: $S \subset A$ over which we want to impose certains specification (e.g. global capacity).
+	A restriction $R$ over a time expanded network $G = (V,A)$ is a set of arcs: $R \subset A$ over which we want to impose certains specification (e.g. global capacity).
 	
-	We define $C_S$ the set of all constraints over the time expanded network $G$.
+	We define $C_R$ the set of all restrictions over the time expanded network $G$.
 \end{madef}
 
 
@@ -297,7 +301,7 @@ The minimum cost multicommodity flow can be formulate as an arc-flow integer pro
 \begin{array}{ll@{}ll}
 \text{minimize}  & \displaystyle\sum\limits_{k=1}^{K}\sum_{(i,j)\in A} x_{ij}^k &\\
 \text{subject to}& \displaystyle\sum\limits_{k=1}^{K}   x_{ij}^k \leq 1,  &\forall (i,j) \in A \\
-& \displaystyle\sum\limits_{k=1}^{K}\sum_{(i,j) \in S}   x_{ij}^k \leq 1, \quad \quad  &\forall S \in C_S \\
+& \displaystyle\sum\limits_{k=1}^{K}\sum_{(i,j) \in R}   x_{ij}^k \leq 1, \quad \quad  &\forall R \in C_R \\
 & \mathcal{N}x^k = b^k,  &\forall k \in \{1,\ldots,K\}\\
 &                                                x_{ij}^k \in \{0,1\}, & \forall (i,j)\in A
 \end{array}
@@ -306,18 +310,18 @@ The minimum cost multicommodity flow can be formulate as an arc-flow integer pro
 
 \todo[inline]{define the $\mathcal{N}^k$ matrix, $b^k$ vector}
 
-This formulation is clear and intuitive: for each commodity we decide whether or not it will use a specific arc at a certain time by setting $x_{ij}^k$ to $1$ or to $0$. But this formulation \eqref{eq:arcFlow} is not scalable due to its high number of constraints and its integrability (see section \ref*{results:arcsVSflow} for a more detailed explanation). We then proceed to find new ways to solve this problem.
+This formulation is clear and intuitive: for each commodity we decide whether or not it will use a specific arc at a certain time by setting $x_{ij}^k$ to $1$ or to $0$. But this formulation \eqref{eq:arcFlow} is not scalable due to its high number of restrictions and its integrability (see section \ref*{results:arcsVSflow} for a more detailed explanation). We then proceed to find new ways to solve this problem.
 
 
 \subsubsection{Relaxation and approximation}
 
-We first relax \eqref{eq:arcFlow} by allowing $x_{ij}^k \geq 0$ while letting the other constraints untouched. 
+We first relax \eqref{eq:arcFlow} by allowing $x_{ij}^k \geq 0$ while letting the other restrictions untouched. 
 
 
 
 \subsection{Column generation method}
 
-In this section, we give a column generation solution procedure that works with arbitrary constraints, as long as the constraints do not span more than one time step (see section \ref*{sec:constraints} for an explanation). We directly consider the relaxation problem.
+In this section, we give a column generation solution procedure that works with arbitrary restrictions, as long as the restrictions do not span more than one time step (see section \ref*{sec:restrictions} for an explanation). We directly consider the relaxation problem.
 
 \subsubsection{Reformulation as a path flow problem}
 
@@ -326,7 +330,7 @@ For this section we will restate our problem using path flows instead of arc flo
 \begin{equation}
 	\begin{array}{ll@{}ll}
 		\text{minimize}  & \displaystyle\sum\limits_{P \in \mathcal{P}} &f(P)|P| &\\
-		\text{subject to}& \displaystyle\sum\limits_{P \in \mathcal{P}_S}   &f(P) \leq 1,  &\forall S \in C_S\\
+		\text{subject to}& \displaystyle\sum\limits_{P \in \mathcal{P}_R}   &f(P) \leq 1,  &\forall R \in C_R\\
 	& \displaystyle\sum\limits_{P \in P^k}   &f(P) = 1,  &\forall k \in \{1,\ldots,K\}\\
 		&                                                &f(P) \geq 0, &P\in \mathcal{P}
 	\end{array}
@@ -336,19 +340,19 @@ For this section we will restate our problem using path flows instead of arc flo
 With: 
 \begin{itemize}
 	\item $\mathcal{P} = \{\mathcal{P}_1,\ldots,\mathcal{P}_K\}$ and $\mathcal{P}_i$ is all the possible distinct paths between $s_i$ and $t_i$.
-	\item $\mathcal{P}_S = {P \in \mathcal{P}: |P\cap S| > 0 }$. This represents the paths that "go trough" the constraint $S$.
+	\item $\mathcal{P}_R = {P \in \mathcal{P}: |P\cap R| > 0 }$. This represents the paths that "goes trough" the restriction $R$.
 \end{itemize}
 
-The second constraint $\sum_{P \in P^k} f(P) = 1$ contains in our case the fact that we need to have exactly one train going from $s_k$ to $t_k$ for each commodity.
+The second restriction $\sum_{P \in P^k} f(P) = 1$ contains in our case the fact that we need to have exactly one train going from $s_k$ to $t_k$ for each commodity.
 
 
 The dual of the primal formulation (\ref{eq:pathFormulationPrimal}) is:
 
 \begin{equation}
 \begin{array}{ll@{}ll}
-\text{maximize}  & -\displaystyle\sum\limits_{S \in C_S} &y_S  +\displaystyle\sum\limits_{i=1}^{K}\sigma_i &\\
-\text{subject to}& \displaystyle\sum\limits_{S \in C_S}   &\delta_P(S)\cdot y_S + \sigma_k \leq |P|,  &\forall P \in \mathcal{P}\\
-&                                                &y \geq 0, &y \in \mathbb{R}^{|C_S|} \\
+\text{maximize}  & -\displaystyle\sum\limits_{R \in C_R} &y_R  +\displaystyle\sum\limits_{i=1}^{K}\sigma_i &\\
+\text{subject to}& \displaystyle\sum\limits_{R \in C_R}   &\delta_P(R)\cdot y_R + \sigma_k \leq |P|,  &\forall P \in \mathcal{P}\\
+&                                                &y \geq 0, &y \in \mathbb{R}^{|C_R|} \\
 & 												 & &\sigma \in \mathbb{R}^K\\
 \end{array}
 \label{eq:pathFormulationDual}
@@ -359,7 +363,7 @@ The dual of the primal formulation (\ref{eq:pathFormulationPrimal}) is:
 
 With respect of the dual variables,the reduced cost $c_P^{\sigma,y}$ for each path flow variable $f(P)$ which belongs to commodity $k$ is :
 \begin{equation}
- c_P^{\sigma,y} = |P| - \sum\limits_{S \in C_S}   \delta_P(S)\cdot y_S -\sigma_k
+ c_P^{\sigma,y} = |P| - \sum\limits_{R \in C_R}   \delta_P(R)\cdot y_R -\sigma_k
 \label{eq:reducedCost}
 \end{equation}
 
@@ -367,9 +371,9 @@ With respect of the dual variables,the reduced cost $c_P^{\sigma,y}$ for each pa
 We can then derive the same complementary slackness conditions.
 
 \begin{theorem}[Path flow complementary slackness conditions]
-	The commodity pah flow $f(P)$ are optimal in the path flow formulation \eqref{eq:pathFormulationPrimal} of the multicommodity flow problem if and only if for some constraint prices $y_S$ and commodity prices $\sigma_k$, the reduced cost and arc flows satisfy the following complementary slackness conditions: 
+	The commodity pah flow $f(P)$ are optimal in the path flow formulation \eqref{eq:pathFormulationPrimal} of the multicommodity flow problem if and only if for some restriction prices $y_R$ and commodity prices $\sigma_k$, the reduced cost and arc flows satisfy the following complementary slackness conditions: 
 	\begin{flalign}
-	&y_S\left[\displaystyle\sum_{k\in [K]}\sum_{P\in P^k}\delta_P(S)\cdot f(P) - 1\right]= 0 \text{ for all } S \in C_S. \label{eq:cond1}\\
+	&y_R\left[\displaystyle\sum_{k\in [K]}\sum_{P\in P^k} \delta_P(R)\cdot f(P) - 1\right]= 0 \text{ for all } R \in C_R. \label{eq:cond1}\\
 	&c_P^{\sigma,y} \geq 0 \text{ for all } k \in [K] \text{ and all }P \in P^k. \label{eq:cond2}\\
 	&c_P^{\sigma,y}\cdot f(P) = 0 \text{ for all k } \in [K] \text{ and all } P\in P^k. \label{eq:cond3}
 	\end{flalign}
@@ -390,7 +394,7 @@ We can then derive the same complementary slackness conditions.
 	 \text{minimize}  &b^T f(\mathcal{P})  \\
 	 \\
 	 \text{subject to} 
-	 &\left( \begin{matrix} A_{C_S}	\\ A_K \\ -A_K \\ \end{matrix} \right) \cdot f(\mathcal{P}) \geq  \left( \begin{matrix} -1_{|C_S|}	\\ 1_K \\ -1_K \\ \end{matrix} \right) \\
+	 &\left( \begin{matrix} A_{C_R}	\\ A_K \\ -A_K \\ \end{matrix} \right) \cdot f(\mathcal{P}) \geq  \left( \begin{matrix} -1_{|C_R|}	\\ 1_K \\ -1_K \\ \end{matrix} \right) \\
 	 \\
 	                                          &f(\mathcal{P}) \geq 0
 	 \end{array}
@@ -400,7 +404,7 @@ We can then derive the same complementary slackness conditions.
 	 With: 
 	 \begin{itemize}
 	 	\item $b \in \mathbb{R}^{|\mathcal{P}|}, \quad b_P = |P|$ is the vector containing the length of the paths.
-	 	\item $A_{C_S} \in \mathbb{R}^{|C_S|\times |\mathcal{P}|}$ where $\left(A_{C_S}\right)_{ij}$ is $1$ if the $i^{th}$ constraint contains an edge that belongs to the $j^{th}$ path and $0$ else.
+	 	\item $A_{C_R} \in \mathbb{R}^{|C_R|\times |\mathcal{P}|}$ where $\left(A_{C_R}\right)_{ij}$ is $1$ if the $i^{th}$ restriction contains an edge that belongs to the $j^{th}$ path and $0$ else.
 	 	\item $A_K \in \mathbb{R}^{K\times |\mathcal{P}|}$ where $\left(A_K\right)_{ij}$ is $1$ if the $j^{th}$ path belongs to $\mathcal{P}_i$ (i.e. belongs to the $i^{th}$ commodity) and $0$ else.
 	 \end{itemize}
  
@@ -410,38 +414,38 @@ We can then derive the same complementary slackness conditions.
  \paragraph{Dual}
  \begin{equation*}
  \begin{array}{ll@{}ll}
- \text{maximize}  &\left( \begin{matrix} -1_{|C_S|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y}   \\
+ \text{maximize}  &\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y}   \\
  \\
  \text{subject to} 
- &\left( \begin{matrix} A_{C_S}^T, A_K^T, -A_K^T \end{matrix} \right) \cdot \tilde{y} \leq  b  \\
+ &\left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right) \cdot \tilde{y} \leq  b  \\
  \\
  &\tilde{y} \geq 0
  \end{array}
  \label{eq:matrixformdual}
  \end{equation*}
  
- Where $\tilde{y} =\left( \begin{matrix} y \\ \tilde{\sigma_1} \\ \tilde{\sigma_2}  \end{matrix} \right) $ with $y \in \mathbb{R}^{|C_S|}$  and $\tilde{\sigma_1} + \tilde{\sigma_2} = \sigma \in \mathbb{R}^{K}$, with $y,\sigma$ being as \eqref{eq:pathFormulationDual}.
+ Where $\tilde{y} =\left( \begin{matrix} y \\ \tilde{\sigma_1} \\ \tilde{\sigma_2}  \end{matrix} \right) $ with $y \in \mathbb{R}^{|C_R|}$  and $\tilde{\sigma_1} + \tilde{\sigma_2} = \sigma \in \mathbb{R}^{K}$, with $y,\sigma$ being as \eqref{eq:pathFormulationDual}.
 
  
  Then we rewrite the conditions \eqref{eq:cond1} and \eqref{eq:cond3} in matrix form:
 \begin{align*}
-&\left[ \left( \left( \begin{matrix} -1_{|C_S|}^T, 1_K^T, -1_K^T  \end{matrix} \right) - f(\mathcal{P})^T\left( \begin{matrix} A_{C_S}^T, A_K^T, -A_K^T \end{matrix} \right) \right) \cdot \tilde{y}\right]_{i}= 0 & \text{ for all } i \in \{0,1\ldots,|C_S| \}\\
-& f(\mathcal{P})^T\left( b - \left( \begin{matrix} A_{C_S}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \right) = 0 &
+&\left[ \left( \left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right) - f(\mathcal{P})^T\left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right) \right) \cdot \tilde{y}\right]_{i}= 0 & \text{ for all } i \in \{0,1\ldots,|C_R| \}\\
+& f(\mathcal{P})^T\left( b - \left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \right) = 0 &
 \end{align*}
  
  
  By the weak duality theorem we have: 
- $$\left( \begin{matrix} -1_{|C_S|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} \leq  
- f(\mathcal{P})^T \left( \begin{matrix} A_{C_S}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \leq f(\mathcal{P})^Tb $$
+ $$\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} \leq  
+ f(\mathcal{P})^T \left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \leq f(\mathcal{P})^Tb $$
  
  Using the strong duality theorem, we also have 
- $$\left( \begin{matrix} -1_{|C_S|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} =  f(\mathcal{P})^Tb  $$
+ $$\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} =  f(\mathcal{P})^Tb  $$
 
 Combining the two results from strong an weak duality we get the following two equalities:
 \begin{align*}
-\left( \begin{matrix} -1_{|C_S|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} = 
-f(\mathcal{P})^T \left( \begin{matrix} A_{C_S}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \\
-f(\mathcal{P})^T \left( \begin{matrix} A_{C_S}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} =  f(\mathcal{P})^Tb 
+\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} = 
+f(\mathcal{P})^T \left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \\
+f(\mathcal{P})^T \left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} =  f(\mathcal{P})^Tb 
 \end{align*}
 
 Wich is exactly what we aimed to obtain.
@@ -453,33 +457,10 @@ The other direction is quite similar but works in the opposite way we just did.
 \end{proof}
 \subsubsection{Column generation method}
 
-With the above formulation, \todo{add numbers} we reduced the number of constraints but increased the number of variables. 
+With the above formulation, \todo{add numbers} we reduced the number of restrictions but increased the number of variables. 
 
 We then proceed to define a \emph{reduced master LP} on a reduced number of paths variables that can be increased if necessary to attain an optimal solution.
 
-
-\paragraph{Initial Solution}
-We produce an initial feasible solution using a greedy algorithm.\\
-
-
-\begin{algorithm}[H]
-	\SetAlgoLined
-	\KwResult{ $\{p_1^0,\ldots,p_K^0 \}$, where $p_k^0$ is a path from $s_k$ to $t_k$}
-	pathsFeasible $= \{ \}$\;
-	
-	\For{$k \in \{1,\ldots,K\}$}{
-		find shortest path candidate $\tilde{p}$ from $s_k$ to $t_k$ using Dijkstra's algorithm.\\
-		\If{$ \tilde{p}$ does not have any conflicts with pathsFeasible}{add $\tilde{p}$ to pathsFeasible.\\}
-		\Else{Delete the edges of $\tilde{p}$ from the graph.\\
-		Goto 3.\\}
-	}
-
-	\caption{Finding and initial feasible solution for the column generation method}
-\end{algorithm}
-
-$ $\\
-
-Where we say that a path $p^*$ does not have conflicts with a set of paths $P$ if using formulation \eqref{eq:pathFormulationPrimal} and putting all $f(p) = 1 \quad \forall p\in P \cup \{p^*\}$ all the constraints are respected.
 
 
 \paragraph{Pricing problem}
@@ -487,15 +468,15 @@ Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}.
 \todo[inline]{explain a bit more in detail}
 \paragraph{Solving the pricing problem efficiently}
 
-Because of the particular nature of the constraints in our problem, one can see that no constraint can span more than one time step in the time expanded network, and that a path cannot have two edges in the same time step (see section \ref*{ten}). 
+Because of the particular nature of the restrictions in our problem, one can see that no restriction can span more than one time step in the time expanded network, and that a path cannot have two edges in the same time step (see section \ref*{ten}). 
 
 Based on these observations, we define the cost of an arc in the graph as:
 \begin{equation*}
-w_{ij} = -\sum_{S \in C_S} \delta_S((i,j))\cdot y_S \in \mathbb{R}
+w_{ij} = -\sum_{R \in C_R} \delta_R((i,j))\cdot y_R \in \mathbb{R}
 \end{equation*}
 
 One can notice that 
-$$ \sum_{(i,j)\in P}\left(\sum_{S \in C_S} \delta_S((i,j))\cdot y_S \right)=   \sum\limits_{S \in C_S}   \delta_P(S)\cdot y_S$$
+$$ \sum_{(i,j)\in P}\left(\sum_{R \in C_R} \delta_R((i,j))\cdot y_R \right)=   \sum\limits_{R \in C_R}    \delta_P(R)\cdot y_R$$
 
 We can then rewrite the reduced cost as: 
 $$ c_P^{\sigma,y} = |P| + \sum\limits_{(i,j) \in P}  w_{ij} -\sigma_k $$
@@ -515,6 +496,33 @@ This shows that the pricing problem can efficiently be solved by searching for a
 
 
 But we have to keep in mind that the weights $\tilde{w}_{ij}$ can be negative! We then use Belman-Ford algorithm since in the time expanded graph there are no cycles.
+
+
+
+\paragraph{Initial Solution}
+We produce an initial feasible solution using a greedy algorithm.\\
+
+
+\begin{algorithm}[H]
+	\SetAlgoLined
+	\KwResult{ $\{p_1^0,\ldots,p_K^0 \}$, where $p_k^0$ is a path from $s_k$ to $t_k$}
+	pathsFeasible $= [$  $]$\;
+	Set weight at $1$ for all edges\;
+	
+	\For{$k \in \{1,\ldots,K\}$}{
+		find shortest path candidate $\tilde{p}$ from $s_k$ to $t_k$ using Dijkstra's algorithm \label{shortestpath}\;
+		\If{$ \tilde{p}$ does not have any conflicts with pathsFeasible}{add $\tilde{p}$ to pathsFeasible\;}
+		\Else{Increase weight of all edges of $\tilde{p}$ by $1$\;
+			Goto \ref{shortestpath}\;}
+	}
+	
+	\caption{Finding and initial feasible solution for the column generation method}
+\end{algorithm}
+
+$ $\\
+
+Where we say that a path $p^*$ does not have conflicts with a set of paths $P$ if using formulation \eqref{eq:pathFormulationPrimal} and putting all $f(p) = 1 \quad \forall p\in P \cup \{p^*\}$ all the restrictions are respected.
+
 
 
 \subsubsection{Relaxation and approximation}
@@ -543,6 +551,12 @@ Is the branch and bound process already implemented in Gurobi ? in this case jus
 \subsection{Ideas}
 \subsection{Theoretical approach}
 \subsection{Results}
+
+\newpage
+
+\section{Conclusion}
+
+
 
 \newpage
 

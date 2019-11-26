@@ -14,18 +14,22 @@ from src.flows.NFirstShortestPaths import PathFinder
 
 class InitialSolutionGenerator:
 
-	def __init__(self, ten:TimeNetwork, constraints, numberOfCommodities):
+	def __init__(self, ten:TimeNetwork, constraints, findConstraints, numberOfCommodities):
 		'''		
 		Parameters
 		----------
 		ten : TimeNetwork
-			time expanded network with sources and sinks with names are source_... and sink_...
+			time expanded network with sources and sinks with names are source_0 and sink_0
 		constraints : list of sets
 			constraints the edges (only one edge of each set can be activated at the same time)
+		findConstraints: dict
+			findConstraints[edge] returns a list of constraint to which the edge belongs
+		numberOfCommodities: int
 		'''
 
 		#save data
 		self.constraints = constraints
+		self.findConstraints = findConstraints
 		self.graph = deepcopy(ten.graph)
 		
 
@@ -33,8 +37,6 @@ class InitialSolutionGenerator:
 		self.sinks = []
 		self.sources = []
 		self.stats = {}
-		self.stats["time for pathFinder: "] = []
-		self.stats["time for checkCollision: "] = []
 		self.stats["not shortest path "] = 0
 
 		#extract and order the sources/sinks 
@@ -62,28 +64,28 @@ class InitialSolutionGenerator:
 		'''
 		return a feasible initial solution using a greedy algorithm
 		'''
-		start = time.time()
 		#go over all pairs of source-sink
 		for s,t in tqdm(zip(self.sources,self.sinks)):
 
-			start_inter = time.time()
-			#find all the paths in order from shortest to longest
-			paths = self.pathFinder.findShortestPaths(s,t,5)
-			stop_inter = time.time()-start_inter
-			self.stats["time for pathFinder: "].append(round(stop_inter,2))
+			#ensure we find a feasible solution for each commodity
+			NotFound = True
 
-			# if there is an issue we just take the next candidate graph
-			# otherwise we add it to the solution and we stop iterating over the candidates
-			for p in paths:
-				start_inter_2 = time.time()
-				if self.checkIssues(p):
-					self.solution.append(p)
-					break
-					self.stats["time for checkCollision: "].append(round(time.time()-start_inter_2,3))
-				else:
-					self.stats["time for checkCollision: "].append(round(time.time()-start_inter_2,3))
-					self.stats["not shortest path "] += 1
-		self.stats["total time to solution: "] = time.time()-start
+			while NotFound:
+				paths = self.pathFinder.findShortestPaths(s,t,5)
+				# if there is an issue we just take the next candidate graph
+				# otherwise we add it to the solution and we stop iterating over the candidates
+				for p in paths:
+					start_inter_2 = time.time()
+					if self.checkIssues(p):
+						self.solution.append(p)
+						NotFound = False
+						break
+					else:
+						self.stats["not shortest path "] += 1
+
+			#reset all the weights since we change commodity
+			self.pathFinder.reset_weights()
+
 		return self.solution
 
 	def  checkIssues(self, path):
@@ -133,17 +135,17 @@ class InitialSolutionGenerator:
 			True if there is a collision between p1 and p2
 			False if there are no collisions
 		'''
-		#TODO: build data structure to accelerate this process
-
-		for c in self.constraints:
-			for edge in p1:
+		
+		for edge in p1:
+			if "source" not in edge[0] and "sink" not in edge[1]:
+				c1 = self.findConstraints[edge]
 				for edge2 in p2:
-					if edge in c and edge2 in c:
-						return True
+					if "source" not in edge2[0] and "sink" not in edge2[1]:
+						c2 = self.findConstraints[edge2]
+						if len([x for x in c1 if x in c2])>0:
+							return True
 
 		return False
 				
 	def showStats(self):
-		self.stats["time for checkCollision: "] = np.mean(np.array(self.stats["time for checkCollision: "]))
-		self.stats["time for pathFinder: "] = np.mean(np.array(self.stats["time for pathFinder: "]))
 		pprint.pprint(self.stats)
