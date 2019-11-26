@@ -3,8 +3,11 @@ import gurobipy
 
 class MasterProblem:
 
-	def __init__(self):
+	def __init__(self,initialSolution):
 		self.model = gurobipy.Model("MasterProblem")
+		self.columns = {}
+		for i, path in initialSolution:
+			self.columns[i] = path
 		raise NotImplementedError()
 
 	
@@ -16,6 +19,7 @@ class MasterProblem:
 
 
 	def generateVariables(self):
+
 		raise NotImplementedError()
 
 	def generateConstraints(self):
