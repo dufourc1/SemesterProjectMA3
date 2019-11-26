@@ -260,6 +260,10 @@ class TimeNetwork:
 
 
 	def get_topology_network(self):
+		'''
+		returns a list of constraint (set of edges) and a dictionnary mapping each edge to 
+		the constraints it belongs to 
+		'''
 		topology_liste = []
 		for time,constraint in self.topology_position.items():
 			for cell, pairs in constraint.items():
@@ -267,8 +271,16 @@ class TimeNetwork:
 		for time,constraint in self.topology_swapping.items():
 			for cell, pairs in constraint.items():
 				topology_liste.append(set(pairs))
-		
-		return topology_liste
+
+		findConstraints = {}
+		for restriction in topology_liste:
+			for edge in restriction:
+				if edge not in findConstraints.keys():
+					find_constraints[edge] = [restriction]
+				else:
+					findConstraints[edge].append(restriction)
+				
+		return topology_liste,findConstraints
 
 
 	def build_new_depth_network(self):

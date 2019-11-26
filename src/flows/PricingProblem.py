@@ -6,13 +6,12 @@ from copy import deepcopy
 
 class PricingSolver:
 
-	def __init__(self,graph, constraints,sources,targets):
+	def __init__(self,graph, constraints,findConstraints,sources,targets):
 		self.graph = nx.Digraph()
 		self.graph.add_edges_from([deepcopy(e) for e in graph.edges])
 		self.sources = sources
 		self.targets = targets
-
-		#TODO build data structure to more efficiently get the constraints that a certain path uses ? 
+		self.findConstraints = findConstraints
 
 
 	def get_columns_to_add(self,dualVariables):

@@ -135,6 +135,9 @@ class InitialSolutionGenerator:
 			True if there is a collision between p1 and p2
 			False if there are no collisions
 		'''
+
+
+		#do not look at the source and sink connected edges since 
 		
 		for edge in p1:
 			if "source" not in edge[0] and "sink" not in edge[1]:
