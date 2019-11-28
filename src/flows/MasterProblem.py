@@ -129,7 +129,12 @@ class MasterProblem:
 
     def addColumn(self,pathToAdd):
         #update all the data structure produce in self.__setup()
+        skipped = 0
         for commodity,path in pathToAdd.items():
+            if path in self.pathVariables:
+                print("skipped addition of path for commodity ",commodity)
+                skipped += 1
+                pass
             self.pathVariables.append(path)
             index = max(i for (commodity,i) in list(self.CommodityPath.keys()))+1
             self.CommodityPath[(commodity,index)] = path
@@ -142,6 +147,8 @@ class MasterProblem:
                             self.findConstraints_path[frozenset(c)].append((commodity,index))
                         else:
                             self.findConstraints_path[frozenset(c)] = [(commodity,index)]
+        if skipped == len(list(pathToAdd.keys())):
+            raise ValueError("only adding already added columns")
         self.model = gurobipy.Model("Master Problem")
         self.build()
         

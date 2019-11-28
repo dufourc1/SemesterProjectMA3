@@ -66,7 +66,7 @@ class PricingSolver:
 
 		# see remark in the report on non activated constraints to get why 
 		# default value is 0 (then the actual edge weight is 1)
-		nx.set_edge_attributes(self.graph,20,"weight")
+		nx.set_edge_attributes(self.graph,1,"weight")
 		for i,constraint in enumerate(constraintsActivated):
 			for edge in constraint:
 				self.graph[edge[0]][edge[1]]["weight"] += dualVariables[i]
@@ -95,7 +95,7 @@ class PricingSolver:
 		'''
 
 		#compute shortest weighted path
-		min_weight_path = nx.shortest_path(self.graph,s,t,"weight")
+		min_weight_path = nx.bellman_ford_path(self.graph,s,t,"weight")
 		min_weight = self.compute_path_length(min_weight_path)
 
 		if min_weight < sigma:
