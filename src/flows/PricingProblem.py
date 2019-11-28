@@ -22,8 +22,25 @@ class PricingSolver:
 
 
 	def get_columns_to_add(self,dualVariables, constraintsAcitvated):
+		'''
+		Return a list of path to add per commodity
 		
-		paths_to_add = []
+		Parameters
+		----------
+		dualVariables : list
+			list of dual variables from the master problem
+			order corresponding to constraintsActivated
+		constraintsAcitvated : list
+			list of activated constraints
+		
+		Returns
+		-------
+		Tuple (dict of paths,boolean)
+			boolean is true if there is a path which improves the solution
+			the dict of paths links each commodity to the path to add (path as a tuple of edges)
+		'''
+		
+		paths_to_add = {}
 		self.set_weights(dualVariables,constraintsAcitvated)
 
 		for i,(s,t) in enumerate(zip(self.sources,self.targets)):
@@ -33,9 +50,13 @@ class PricingSolver:
 
 			improvable, path = self.check_if_improvable(s,t,sigma)
 			if improvable:
-				paths_to_add.append(path)
+				paths_to_add[i] = path
 
-		return [[(path[i],path[i+1]) for i in range(len(path)-1)] for path in paths_to_add]
+		# translate the path to an edge list and to tuple for later compatibility
+		if len(paths_to_add) == 0: 
+			return {},False
+		else: 
+			return { key:tuple([(path[i],path[i+1]) for i in range(len(path)-1)]) for key,path in paths_to_add.items()},True
 
 
 	def set_weights(self,dualVariables, constraintsActivated):

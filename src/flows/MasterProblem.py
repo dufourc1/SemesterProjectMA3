@@ -127,7 +127,7 @@ class MasterProblem:
         return self.relaxedModel.getAttr("Pi", self.model.getConstrs())
 
 
-    def addColumn(self):
+    def addColumn(self,pathToAdd):
         #update all the data structure produce in self.__setup()
         raise NotImplementedError()
         
