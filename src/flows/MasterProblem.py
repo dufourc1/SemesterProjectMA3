@@ -80,11 +80,10 @@ class MasterProblem:
     def generateVariables(self):
         '''
         create the variables of the master problem, indexed as
-         [
+        [
             commodity to which the path belongs, 
-            path index in this commodity, 
-            set of constraints it belongs to (hashed)
-         ]
+            path index in this commodity
+        ]
         '''
         # we add one variable per path for each commodity
         self.pathVars = self.model.addVars(self.CommodityPath, obj= self.cost, vtype = gurobipy.GRB.BINARY,name = "path")
@@ -92,15 +91,15 @@ class MasterProblem:
 
     def generateConstraints(self):
 
-        #add constraints to have exactly one unit per commodity 
-        self.model.addConstrs((self.pathVars.sum(k,'*') == 1 for k in self.commodities), "unitFlow")
-
-        #add constraints to respect the external restrictions
+        # add constraints to respect the external restrictions
         # only iterate trough the constraints activated by the pathVariables we are currently using
         for i,constraint in enumerate(self.constraintsActivated):
             self.model.addConstr(
                 (gurobipy.quicksum(self.pathVars[p] for p in self.findConstraints_path[constraint])<= 1),"Restrictions-"+str(i)
             )
+
+        #add constraints to have exactly one unit per commodity 
+        self.model.addConstrs((self.pathVars.sum(k,'*') == 1 for k in self.commodities), "unitFlow")
      	
 
 
@@ -120,6 +119,8 @@ class MasterProblem:
     def getDualVariables(self):
         '''
         return the dual values of the relaxation of the master LP
+        first are the values linked to the external restrictions (y_R)
+        the last ones to the commodities (sigma_k)
         '''
         return self.relaxedModel.getAttr("Pi", self.model.getConstrs())
 
