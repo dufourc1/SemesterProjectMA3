@@ -129,16 +129,19 @@ class MasterProblem:
 
     def addColumn(self,pathToAdd):
         #update all the data structure produce in self.__setup()
-        raise NotImplementedError()
-        
-        # below is the code from the webinar (as is) 
-        #first the parameters given to the function
-        objective = None
-        newPattern = None # obtained using self.model.getAttr("X", self.model.getVars())  on the dual
-
-        #then the actual code
-        ctName = (f'PatternUseVar{len(self.model.getVars())}') 
-        newColumn = gurobipy.Column(newPattern,self.model.getConstrs())
-        self.model.addVar(vtype = gurobipy.GRB.INTEGER, lb = 0, obj = objective, column = newColumn, name = ctName)
-        self.model.update()
+        for commodity,path in pathToAdd.items():
+            self.pathVariables.append(path)
+            index = max(i for (commodity,i) in list(self.CommodityPath.keys()))+1
+            self.CommodityPath[(commodity,index)] = path
+            self.cost[(commodity,index)] = len(path)
+            for edge in path:
+                if "source" not in edge[0] and "sink" not in edge[1]:
+                    for c in self.findConstraints_edges[edge]:
+                        self.constraintsActivated.add(frozenset(c))
+                        if frozenset(c) in self.findConstraints_path.keys():
+                            self.findConstraints_path[frozenset(c)].append((commodity,index))
+                        else:
+                            self.findConstraints_path[frozenset(c)] = [(commodity,index)]
+        self.model = gurobipy.Model("Master Problem")
+        self.build()
         

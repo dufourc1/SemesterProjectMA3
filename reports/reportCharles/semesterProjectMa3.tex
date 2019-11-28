@@ -69,8 +69,8 @@
 
 
 %to hide the todos or to show them
-\usepackage[colorinlistoftodos,prependcaption,obeyDraft]{todonotes}
-%\usepackage[colorinlistoftodos,prependcaption]{todonotes}
+%\usepackage[colorinlistoftodos,prependcaption,obeyDraft]{todonotes}
+\usepackage[colorinlistoftodos,prependcaption]{todonotes}
 
 
 \usepackage{xargs}                      % Use more than one optional parameter in a new commands
@@ -467,7 +467,7 @@ We then proceed to define a \emph{reduced master LP} on a reduced number of path
 Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. 
 \todo[inline]{explain a bit more in detail}
 \paragraph{Solving the pricing problem efficiently}
-
+\todo[inline]{Explain why $0$ is the dual value of empty restriction (see notebook)}
 Because of the particular nature of the restrictions in our problem, one can see that no restriction can span more than one time step in the time expanded network, and that a path cannot have two edges in the same time step (see section \ref*{ten}). 
 
 Based on these observations, we define the cost of an arc in the graph as:
