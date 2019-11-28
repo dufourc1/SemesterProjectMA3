@@ -276,7 +276,7 @@ class TimeNetwork:
 		for restriction in topology_liste:
 			for edge in restriction:
 				if edge not in findConstraints.keys():
-					find_constraints[edge] = [restriction]
+					findConstraints[edge] = [restriction]
 				else:
 					findConstraints[edge].append(restriction)
 				

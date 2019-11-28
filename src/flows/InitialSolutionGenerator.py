@@ -58,14 +58,14 @@ class InitialSolutionGenerator:
 		self.pathFinder = PathFinder(self.graph)
 
 		#create empty solutions 
-		self.solution = {}
+		self.solution = []
 		
 	def getInitialSolution(self):
 		'''
 		return a feasible initial solution using a greedy algorithm
 		'''
 		#go over all pairs of source-sink
-		for i,s,t in tqdm(enumerate(zip(self.sources,self.sinks))):
+		for i,(s,t) in tqdm(enumerate(zip(self.sources,self.sinks))):
 
 			#ensure we find a feasible solution for each commodity
 			NotFound = True
@@ -77,7 +77,7 @@ class InitialSolutionGenerator:
 				for p in paths:
 					start_inter_2 = time.time()
 					if self.checkIssues(p):
-						self.solution[i] = p
+						self.solution.append(p)
 						NotFound = False
 						break
 					else:
