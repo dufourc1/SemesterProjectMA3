@@ -6,39 +6,51 @@ from copy import deepcopy
 
 class PricingSolver:
 
-	def __init__(self,graph, constraints,findConstraints,sources,targets):
-		self.graph = nx.Digraph()
+	def __init__(self,graph, constraints,findConstraints,numberOfCommodities):
+		self.graph = nx.DiGraph()
 		self.graph.add_edges_from([deepcopy(e) for e in graph.edges])
-		self.sources = sources
-		self.targets = targets
+		self.__set_sources_sinks(numberOfCommodities)
 		self.findConstraints = findConstraints
 
 
-	def get_columns_to_add(self,dualVariables):
+	def __set_sources_sinks(self,numberOfCommodities):
+		self.sources = []
+		self.targets = []
+		for i in range(numberOfCommodities):
+			self.sources.append("source_"+str(i))
+			self.targets.append("sink_"+str(i))
+
+
+	def get_columns_to_add(self,dualVariables, constraintsAcitvated):
 		
 		paths_to_add = []
-		self.set_weights(self,dualVariables)
+		self.set_weights(dualVariables,constraintsAcitvated)
 
-		for i,s,t in enumerate(zip(self.sources,self.targets)):
+		for i,(s,t) in enumerate(zip(self.sources,self.targets)):
 			#get the sigma dual variables from the array
 			
-			#TODO check if correct
 			sigma = dualVariables[-len(self.sources)+i]
 
 			improvable, path = self.check_if_improvable(s,t,sigma)
 			if improvable:
 				paths_to_add.append(path)
 
-		return path
+		return [[(path[i],path[i+1]) for i in range(len(path)-1)] for path in paths_to_add]
 
 
-	def set_weights(self,dualVariables):
+	def set_weights(self,dualVariables, constraintsActivated):
 		'''
 		Get the weights of the constraints (dual variable from the LP) and set them as attributes of the edges
 		'''
 
-		#TODO add plus 1 to all the weights (cf report)
-		raise NotImplementedError()
+		# see remark in the report on non activated constraints to get why 
+		# default value is 0 (then the actual edge weight is 1)
+		nx.set_edge_attributes(self.graph,1,"weight")
+		for i,constraint in enumerate(constraintsActivated):
+			for edge in constraint:
+				self.graph[edge[0]][edge[1]]["weight"] += dualVariables[i]
+
+		
 
 	def check_if_improvable(self,s,t,sigma):
 		'''
@@ -77,3 +89,5 @@ class PricingSolver:
 			source, target = path[i], path[i+1]
 			edge = self.graph[source][target]
 			total_length += edge['weight']
+
+		return total_length

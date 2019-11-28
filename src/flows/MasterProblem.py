@@ -104,7 +104,9 @@ class MasterProblem:
 
 
     def generateObjective(self):
-        # objective is set by default to minimize in gurobi 
+        # objective is set by default to minimize in gurobi but set it anyway
+        #  (1: minimize, -1: maximize)
+        self.model.ModelSense = 1
         # obj parameter in adVars did the job
         pass
 
