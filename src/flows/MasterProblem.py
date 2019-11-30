@@ -30,6 +30,7 @@ class MasterProblem:
         self.findConstraints_edges = findConstraints
         self.commodities = np.arange(numberOfCommodities)
         self.__setup(initialSolution)
+        self.indexes = {x:0 for x in self.commodities}
 
 
     def __setup(self,initialSolution):
@@ -54,11 +55,10 @@ class MasterProblem:
             self.PathCommodity[tuple(initialSolution[k])] = (k,0)
 
 
-        #list of activated constraints 
         self.constraintsActivated = set()
          #links constraints (as key) to a list of paths that go through them 
         self.findConstraints_path = {}
-        #not optimal but once each problem --> to modify later if time 
+
         for path in self.pathVariables:
             for edge in path:
                 if "source" not in edge[0] and "sink" not in edge[1]:
@@ -134,19 +134,20 @@ class MasterProblem:
             if path in self.pathVariables:
                 print("skipped addition of path for commodity ",commodity)
                 skipped += 1
-                pass
-            self.pathVariables.append(path)
-            index = max(i for (commodity,i) in list(self.CommodityPath.keys()))+1
-            self.CommodityPath[(commodity,index)] = path
-            self.cost[(commodity,index)] = len(path)
-            for edge in path:
-                if "source" not in edge[0] and "sink" not in edge[1]:
-                    for c in self.findConstraints_edges[edge]:
-                        self.constraintsActivated.add(frozenset(c))
-                        if frozenset(c) in self.findConstraints_path.keys():
-                            self.findConstraints_path[frozenset(c)].append((commodity,index))
-                        else:
-                            self.findConstraints_path[frozenset(c)] = [(commodity,index)]
+            else:
+                self.pathVariables.append(path)
+                index = self.indexes[commodity] + 1
+                self.indexes[commodity]+= 1
+                self.CommodityPath[(commodity,index)] = path
+                self.cost[(commodity,index)] = len(path)
+                for edge in path:
+                    if "source" not in edge[0] and "sink" not in edge[1]:
+                        for c in self.findConstraints_edges[edge]:
+                            self.constraintsActivated.add(frozenset(c))
+                            if frozenset(c) in self.findConstraints_path.keys():
+                                self.findConstraints_path[frozenset(c)].append((commodity,index))
+                            else:
+                                self.findConstraints_path[frozenset(c)] = [(commodity,index)]
         if skipped == len(list(pathToAdd.keys())):
             raise ValueError("only adding already added columns")
         self.model = gurobipy.Model("Master Problem")

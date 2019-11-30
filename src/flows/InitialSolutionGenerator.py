@@ -63,6 +63,9 @@ class InitialSolutionGenerator:
 		'''
 		return a feasible initial solution using a greedy algorithm
 		'''
+
+		self.solution = []
+		self.stats = {}
 		#go over all pairs of source-sink
 		for i,(s,t) in tqdm(enumerate(zip(self.sources,self.sinks))):
 

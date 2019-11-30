@@ -69,7 +69,7 @@ class PricingSolver:
 		nx.set_edge_attributes(self.graph,1,"weight")
 		for i,constraint in enumerate(constraintsActivated):
 			for edge in constraint:
-				self.graph[edge[0]][edge[1]]["weight"] += dualVariables[i]
+				self.graph[edge[0]][edge[1]]["weight"] -= dualVariables[i]
 
 		
 
@@ -97,8 +97,9 @@ class PricingSolver:
 		#compute shortest weighted path
 		min_weight_path = nx.bellman_ford_path(self.graph,s,t,"weight")
 		min_weight = self.compute_path_length(min_weight_path)
-
+		
 		if min_weight < sigma:
+			print(f"certificat for {s,t}: weight is {min_weight}, sigma is {sigma}")
 			return True,min_weight_path
 		else:
 			return False,min_weight_path
