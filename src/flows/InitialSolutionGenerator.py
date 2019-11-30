@@ -37,7 +37,6 @@ class InitialSolutionGenerator:
 		self.sinks = []
 		self.sources = []
 		self.stats = {}
-		self.stats["not shortest path "] = 0
 
 		#extract and order the sources/sinks 
 		for i in range(numberOfCommodities):
@@ -81,7 +80,10 @@ class InitialSolutionGenerator:
 						NotFound = False
 						break
 					else:
-						self.stats["not shortest path "] += 1
+						if f"not shortest path for {i}" not in self.stats.keys():
+							self.stats[f"not shortest path for {i}"] = 1
+						else:
+							self.stats[f"not shortest path for {i}"] += 1
 
 			#reset all the weights since we change commodity
 			self.pathFinder.reset_weights()

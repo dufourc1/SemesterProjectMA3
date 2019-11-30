@@ -129,15 +129,15 @@ class TimeNetwork:
 			for node in self.graph.nodes:
 				if node.startswith(str(source)) and "out" in node and  node.endswith("t0") :
 					if directions is None:
-						self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
+						self.graph.add_edge(source_name,node, capacity = 1, weight = 1)
 						numbersConnection += 1
 					else:
 						if ORIENTATION_INBOUND[directions[agent]] in node:
-							self.graph.add_edge(source_name,node, capacity = 1, weight = 0)
+							self.graph.add_edge(source_name,node, capacity = 1, weight = 1)
 							numbersConnection += 1
 
 				if node.startswith(str(sink)) and 'in' in node and not node.endswith("t0"):
-					self.graph.add_edge(node,sink_name, capacity = 1, weight = 0)
+					self.graph.add_edge(node,sink_name, capacity = 1, weight = 1)
 		if numbersConnection < len(sources):
 			print("Error, not all sources were connected")		
 
@@ -145,8 +145,8 @@ class TimeNetwork:
 
 
 	def build_base_layer(self,incoming_graph_data, 
-						default_weight = 0, 
-						default_capacity = 1e6, 
+						default_weight = 1, 
+						default_capacity = 1, 
 						waiting_cost = None,
 						waiting_capacity = None):
 		'''
