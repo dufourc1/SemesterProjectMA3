@@ -349,11 +349,11 @@ The second restriction $\sum_{P \in P^k} f(P) = 1$ contains in our case the fact
 The dual of the primal formulation (\ref{eq:pathFormulationPrimal}) is:
 
 \begin{equation}
-\begin{array}{ll@{}ll}
-\text{maximize}  & -\displaystyle\sum\limits_{R \in C_R} &y_R  +\displaystyle\sum\limits_{i=1}^{K}\sigma_i &\\
-\text{subject to}& \displaystyle\sum\limits_{R \in C_R}   &\delta_P(R)\cdot y_R + \sigma_k \leq |P|,  &\forall P \in \mathcal{P}\\
-&                                                &y \geq 0, &y \in \mathbb{R}^{|C_R|} \\
-& 												 & &\sigma \in \mathbb{R}^K\\
+\begin{array}{ll@{}lll}
+\text{maximize}  &\displaystyle\sum\limits_{R \in C_R} &y_R  +\displaystyle\sum\limits_{i=1}^{K}\sigma_i &\\
+\text{subject to}  & \displaystyle\sum\limits_{R \in C_R}   &\delta_P(R)\cdot y_R + \sigma_k \leq |P|,  &\forall P \in \mathcal{P}\\
+ &                                               &y \leq 0, &y \in \mathbb{R}^{|C_R|} \\
+ &												 & &\sigma \in \mathbb{R}^K\\
 \end{array}
 \label{eq:pathFormulationDual}
 \end{equation}
@@ -394,7 +394,7 @@ We can then derive complementary slackness conditions.
 	 \text{minimize}  &b^T f(\mathcal{P})  \\
 	 \\
 	 \text{subject to} 
-	 &\left( \begin{matrix} A_{C_R}	\\ A_K \\ -A_K \\ \end{matrix} \right) \cdot f(\mathcal{P}) \geq  \left( \begin{matrix} -1_{|C_R|}	\\ 1_K \\ -1_K \\ \end{matrix} \right) \\
+	 &\left( \begin{matrix} -A_{C_R}	\\ A_K \\ -A_K \\ \end{matrix} \right) \cdot f(\mathcal{P}) \geq  \left( \begin{matrix} -1_{|C_R|}	\\ 1_K \\ -1_K \\ \end{matrix} \right) \\
 	 \\
 	                                          &f(\mathcal{P}) \geq 0
 	 \end{array}
@@ -417,7 +417,7 @@ We can then derive complementary slackness conditions.
  \text{maximize}  &\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y}   \\
  \\
  \text{subject to} 
- &\left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right) \cdot \tilde{y} \leq  b  \\
+ &\left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right) \cdot \tilde{y} \leq  b  \\
  \\
  &\tilde{y} \geq 0
  \end{array}
@@ -429,14 +429,14 @@ We can then derive complementary slackness conditions.
  
  Then we rewrite the conditions \eqref{eq:cond1} and \eqref{eq:cond3} in matrix form:
 \begin{align*}
-&\left[ \left( \left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right) - f(\mathcal{P})^T\left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right) \right) \cdot \tilde{y}\right]_{i}= 0 & \text{ for all } i \in \{0,1\ldots,|C_R| \}\\
-& f(\mathcal{P})^T\left( b - \left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \right) = 0 &
+&\left[ \left( \left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right) - f(\mathcal{P})^T\left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right) \right) \cdot \tilde{y}\right]_{i}= 0 & \text{ for all } i \in \{0,1\ldots,|C_R| \}\\
+& f(\mathcal{P})^T\left( b - \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \right) = 0 &
 \end{align*}
  
  
  By the weak duality theorem we have: 
  $$\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} \leq  
- f(\mathcal{P})^T \left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \leq f(\mathcal{P})^Tb $$
+ f(\mathcal{P})^T \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \leq f(\mathcal{P})^Tb $$
  
  Using the strong duality theorem, we also have 
  $$\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} =  f(\mathcal{P})^Tb  $$
@@ -444,11 +444,11 @@ We can then derive complementary slackness conditions.
 Combining the two results from strong an weak duality we get the following two equalities:
 \begin{align*}
 \left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} = 
-f(\mathcal{P})^T \left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \\
-f(\mathcal{P})^T \left( \begin{matrix} A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} =  f(\mathcal{P})^Tb 
+f(\mathcal{P})^T \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \\
+f(\mathcal{P})^T \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} =  f(\mathcal{P})^Tb 
 \end{align*}
 
-Wich is exactly what we aimed to obtain.
+Which is exactly what we aimed to obtain.
 
 The other direction is quite similar but works in the opposite way we just did.
 
@@ -472,11 +472,13 @@ Because of the particular nature of the restrictions in our problem, one can see
 
 Based on these observations, we define the cost of an arc in the graph as:
 \begin{equation*}
-w_{ij} = -\sum_{R \in C_R} \delta_R((i,j))\cdot y_R \in \mathbb{R}
+w_{ij} = -\sum_{R \in C_R} \delta_R((i,j))\cdot y_R \geq 0
 \end{equation*}
 
 One can notice that 
 $$ \sum_{(i,j)\in P}\left(\sum_{R \in C_R} \delta_R((i,j))\cdot y_R \right)=   \sum\limits_{R \in C_R}    \delta_P(R)\cdot y_R$$
+
+
 
 We can then rewrite the reduced cost as: 
 $$ c_P^{\sigma,y} = |P| + \sum\limits_{(i,j) \in P}  w_{ij} -\sigma_k $$
@@ -492,10 +494,9 @@ So equation \eqref{eq:cond2} becomes:
 \end{eqnarray*}
 
 
-This shows that the pricing problem can efficiently be solved by searching for a weighted shortest paths $p^*_k$ between $s_k$ and $t_k$ for all commodities $k \in [K]$. The weight for each arc $(i,j)\in A$ is given by $\tilde{w}_{ij} = w_{ij}+1$.
+This shows that the pricing problem can efficiently be solved by searching for a weighted shortest paths $p^*_k$ between $s_k$ and $t_k$ for all commodities $k \in [K]$ . The weight for each arc $(i,j)\in A$ is given by $\tilde{w}_{ij} = w_{ij}+1$. We can use Dijkstra's algorithm to efficiently solve this problem since the weights of the edges are greater than $0$.
 
 
-But we have to keep in mind that the weights $\tilde{w}_{ij}$ can be negative! We then use Belman-Ford algorithm since in the time expanded graph there are no cycles.
 
 
 

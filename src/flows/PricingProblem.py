@@ -95,7 +95,7 @@ class PricingSolver:
 		'''
 
 		#compute shortest weighted path
-		min_weight_path = nx.bellman_ford_path(self.graph,s,t,"weight")
+		min_weight_path = nx.shortest_path(self.graph,s,t,"weight")
 		min_weight = self.compute_path_length(min_weight_path)
 		
 		if min_weight < sigma:

@@ -21,7 +21,7 @@ class PathFinder:
 		paths = []
 		for i in range(n):
 			#find shortest path as a list of nodes
-			path = nx.shortest_path(self.graph,source,target, weight = "weight")
+			path = nx.shortest_path(self.graph,source,target, weight = "weight", method= 'dijkstra')
 			
 			#translate the paths from list of nodes to list of edges
 			path_pair_nodes = [path[i: i + 2] for i in range(len(path)-1)]

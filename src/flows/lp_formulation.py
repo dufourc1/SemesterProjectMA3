@@ -17,7 +17,7 @@ class MCFlow:
 			Time expanded Network containing a graph
 			
 			graph on which to run the multicommodity flow problem
-			should have source and sink nodes annotated like "source_agent_1", "sink_agent_1" 
+			should have source and sink nodes annotated like "source_1", "sink_1" 
 			should have edges with both weight and capacity
 
 		numberOfCommodities : int
@@ -119,10 +119,10 @@ class MCFlow:
 		inflow = {}
 		for node in self.nodes:
 			for commodity in self.commodities:
-				if node.startswith("source") and int(node[-1]) == commodity:
-					inflow[(int(node[-1]),node)] = 1
-				elif node.startswith("sink") and int(node[-1]) == commodity:
-					inflow[(int(node[-1]),node)] = -1
+				if node.startswith("source") and int(node.split("_")[-1]) == commodity:
+					inflow[(int(node.split("_")[-1]),node)] = 1
+				elif node.startswith("sink") and int(node.split("_")[-1]) == commodity:
+					inflow[(int(node.split("_")[-1]),node)] = -1
 				else:
 					inflow[(commodity,node)] = 0
 
