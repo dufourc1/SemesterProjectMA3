@@ -9,7 +9,7 @@ class MasterProblem:
     Suppose at least one difference between s_k, s_i or t_k, t_i  if i is different than k
     '''
 
-    def __init__(self, initialSolution, constraints, findConstraints,numberOfCommodities):
+    def __init__(self, initialSolution, constraints, findConstraints,numberOfCommodities,verbose = False):
         '''
         create the necessary data structure to correctly handle the column generation procedure 
         
@@ -25,6 +25,9 @@ class MasterProblem:
 
         numberOfCommodities : int        
         '''
+        if not verbose:
+            gurobipy.setParam("LogToConsole",0)
+
         self.model = gurobipy.Model("MasterProblem")
         self.constraints = constraints
         self.findConstraints_edges = findConstraints

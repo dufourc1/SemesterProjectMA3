@@ -424,7 +424,7 @@ We can then derive complementary slackness conditions.
  \label{eq:matrixformdual}
  \end{equation*}
  
- Where $\tilde{y} =\left( \begin{matrix} y \\ \tilde{\sigma_1} \\ \tilde{\sigma_2}  \end{matrix} \right) $ with $y \in \mathbb{R}^{|C_R|}$  and $\tilde{\sigma_1} + \tilde{\sigma_2} = \sigma \in \mathbb{R}^{K}$, with $y,\sigma$ being as \eqref{eq:pathFormulationDual}.
+ Where $\tilde{y} =\left( \begin{matrix} -y \\ \tilde{\sigma_1} \\ \tilde{\sigma_2}  \end{matrix} \right) $ with $y \in \mathbb{R}^{|C_R|}$  and $\tilde{\sigma_1} + \tilde{\sigma_2} = \sigma \in \mathbb{R}^{K}$, with $y,\sigma$ being as \eqref{eq:pathFormulationDual}.
 
  
  Then we rewrite the conditions \eqref{eq:cond1} and \eqref{eq:cond3} in matrix form:
@@ -462,11 +462,12 @@ With the above formulation, \todo{add numbers} we reduced the number of restrict
 We then proceed to define a \emph{reduced master LP} on a reduced number of paths variables that can be increased if necessary to attain an optimal solution.
 
 
+Explain column generation method until we have to talk about pricing problem.
 
 \paragraph{Pricing problem}
 Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. 
-\todo[inline]{explain a bit more in detail}
-\paragraph{Solving the pricing problem efficiently}
+
+\subparagraph{Solving the pricing problem efficiently}
 \todo[inline]{Explain why $0$ is the dual value of empty restriction (see notebook)}
 Because of the particular nature of the restrictions in our problem, one can see that no restriction can span more than one time step in the time expanded network, and that a path cannot have two edges in the same time step (see section \ref*{ten}). 
 
@@ -494,7 +495,7 @@ So equation \eqref{eq:cond2} becomes:
 \end{eqnarray*}
 
 
-This shows that the pricing problem can efficiently be solved by searching for a weighted shortest paths $p^*_k$ between $s_k$ and $t_k$ for all commodities $k \in [K]$ . The weight for each arc $(i,j)\in A$ is given by $\tilde{w}_{ij} = w_{ij}+1$. We can use Dijkstra's algorithm to efficiently solve this problem since the weights of the edges are greater than $0$.
+This shows that the pricing problem can efficiently be solved by searching for a weighted shortest paths $p^*_k$ between $s_k$ and $t_k$ for all commodities $k \in [K]$ . The weight for each arc $(i,j)\in A$ is given by $\tilde{w}_{ij} = w_{ij}+1$. We can use Dijkstra's algorithm to efficiently solve this problem since the weights of the edges are positive.
 
 
 

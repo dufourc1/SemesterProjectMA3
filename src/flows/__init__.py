@@ -4,3 +4,4 @@ from .InitialSolutionGenerator import InitialSolutionGenerator
 from .NFirstShortestPaths import PathFinder
 from .MasterProblem import MasterProblem as MasterIP
 from .PricingProblem import PricingSolver
+from .solver import Solver

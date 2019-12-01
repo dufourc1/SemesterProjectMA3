@@ -7,7 +7,7 @@ import time
 
 class MCFlow:
 
-	def __init__(self, graph,numberOfCommodities, topology, integer = True):
+	def __init__(self, graph,numberOfCommodities, topology, integer = True,verbose = False):
 		'''
 		build the gurobipy models and add the constraints specified in self.__add_constraints()
 		
@@ -30,7 +30,9 @@ class MCFlow:
 			force solution to be integral (Integer Programming)
 		'''
 
-		#extract the graph from the time evolving network
+		if not verbose:
+			gurobipy.setParam("LogToConsole",0)
+
 		
 
 		#build the two principal lists
