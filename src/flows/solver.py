@@ -15,6 +15,23 @@ import gurobipy
 class Solver:
 
 	def __init__(self, logfile, method = "Column Generation",useDirections = False, useSpeeds = False,verbose = True):
+		'''
+		
+		
+		Parameters
+		----------
+		logfile : string
+			name to a file where the logs of the solver will be saved (if it does not exist it is created)
+		method : str, optional
+			choose which method to solve the routing problem, either "Column Generation" or "Arc Fromulation",
+			 by default "Column Generation"
+		useDirections : bool, optional
+			use directions of agent to connect agents to the time expanded network, by default False
+		useSpeeds : bool, optional
+			NOT IMPLEMENTED YET, by default False
+		verbose : bool, optional
+			Allow printing to the console, by default True
+		'''
 		self.stats = {}
 		self.verbose = verbose
 		self.useDirections = useDirections
@@ -27,6 +44,15 @@ class Solver:
 
 
 	def build(self, env, timeHorizon):
+		'''
+		build the necessary data structure to solve the routing problem (TEN, dictionaries,...)
+		
+		Parameters
+		----------
+		env : Flatland environment
+		timeHorizon : int
+			the length to build the time expanded network
+		'''
 					
 		self.logger.info(f"Building solver with {self.method} and a time expanded network of size {timeHorizon}")
 		self.stats = {}
@@ -43,19 +69,41 @@ class Solver:
 	def solve(self,env,timeHorizon):
 		'''
 		solve the multicommodity flow problem and keep the results in memory
+		
+		Parameters
+		----------
+		env : Flatland environment
+		timeHorizon : int
+			the length to build the time expanded network
+
+		Returns
+		-------
+		score (objective function of the integer program)
+		
+		Raises
+		------
+		ValueError
+			if method of solver is not implemented
 		'''
 		self.build(env,timeHorizon)
 		self.logger.info("Solving")
 		if self.method == "Column Generation":
-			self.appply_column_generation()
+			return self.appply_column_generation()
 		elif self.method == "Arc Formulation":
-			self.apply_arc_formulation()
+			return self.apply_arc_formulation()
 		else:
 			raise ValueError(f"unknown method {method} to solve the mc flow problem."+
 				 "\\Column Generation or  Arc Formulation are implemented.")
 		self.logger.info("Solving ended")
 
 	def agents_information(self, env):
+		'''
+		get necessaries informations to create the commodities
+		
+		Parameters
+		----------
+		env : Faltland environment
+		'''
 		self.sources = []
 		self.sinks = []
 		self.directions = []
@@ -69,6 +117,14 @@ class Solver:
 
 
 	def build_time_expanded_network(self, timeHorizon):
+		'''
+		Build the time expanded network and get data structure for 
+		constraints handling (constraints (set) and dicitonnary to track edge to constraint)
+		
+		Parameters
+		----------
+		timeHorizon : int
+		'''
 		self.logger.info("Building time expanded network")
 		self.timeExpandedNetwork = TimeNetwork(self.transitionNetwork,depth = timeHorizon)
 		if self.useDirections:
@@ -82,6 +138,7 @@ class Solver:
 		raise NotImplementedError()
 
 	def setup_column_generation(self):
+
 		self.logger.info("setting up column generation method")
 		self.constraints,self.find_constraints = self.timeExpandedNetwork.get_topology_network()
 		self.initialSolutionGenerator = InitialSolutionGenerator(self.timeExpandedNetwork,self.constraints,
@@ -89,6 +146,7 @@ class Solver:
 		self.logger.info("finished set up for column generation method")
 
 	def setup_arc_formulation(self):
+
 		self.logger.info("setting up for arc formulation")
 		self.constraints,self.find_constraints = self.timeExpandedNetwork.get_topology_network()
 		try:
@@ -99,12 +157,20 @@ class Solver:
 
 
 	def apply_arc_formulation(self):
+		'''
+		solve IP defined by arc formulation
+		'''
 		self.logger.info("solving with arc formulation")
 		self.mcflow.solve()
-		print(f"score: {self.mcflow.m.objVal}")
+		if self.verbose:
+			print(f"score: {self.mcflow.m.objVal}")
 		self.logger.info("finished solving with arc formulation")
+		return self.mcflow.m.objVal
 
-	def appply_column_generation(self,verbose = True):
+	def appply_column_generation(self):
+		'''
+		solve iteratively IP defined by column generation method
+		'''
 		self.logger.info("solving with column generation")
 		flag = True
 		iteration = 1
@@ -127,5 +193,8 @@ class Solver:
 				self.master.addColumn(pathsToAdd)
 		self.logger.info(f"finished solving with column generation after {iteration} iterations")
 		self.master.model.optimize()
-		print(f"score: {self.master.model.objVal}")
+		if self.verbose:
+			print(f"score: {self.master.model.objVal}")
 		self.logger.info("finished solving integer formulation")
+
+		return self.master.model.objVal

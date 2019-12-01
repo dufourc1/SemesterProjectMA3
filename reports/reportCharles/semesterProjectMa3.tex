@@ -317,6 +317,8 @@ This formulation is clear and intuitive: for each commodity we decide whether or
 
 We first relax \eqref{eq:arcFlow} by allowing $x_{ij}^k \geq 0$ while letting the other restrictions untouched. 
 
+We then use a cutting plane algorithm to solve the IP.
+
 
 
 \subsection{Column generation method}
@@ -531,6 +533,8 @@ Where we say that a path $p^*$ does not have conflicts with a set of paths $P$ i
 
 Once we solved the problem above, we do not have an integral multicommodity flow, hence the solution is not feasible. In order to get a feasible solution from the fractional flow, we use the   following approximations:
 
+Cutting planes
+
 \idea[inline]{fill path one by one in decreasing order of flow or just branch and bound}
 
 
@@ -541,7 +545,7 @@ Once we solved the problem above, we do not have an integral multicommodity flow
 \subsection{Arc formulation and flow formulation}
 \label{results:arcsVSflow}
 
-Is the branch and bound process already implemented in Gurobi ? in this case just ask to solve the reduced master LP first as an IP, if it fails do one step of the column generation method and then ask again after updating the variables if the IP is feasible.
+Is the branch and bound process already implemented in Gurobi ? {\bfseries yes} in this case just ask to solve the reduced master LP first as an IP, if it fails do one step of the column generation method and then ask again after updating the variables if the IP is feasible.
 
 \idea[inline]{Check the percentage of integer solution in the relaxed formulation.}
 \subsection{Approximation comparison}
