@@ -99,7 +99,6 @@ class PricingSolver:
 		min_weight = self.compute_path_length(min_weight_path)
 		
 		if min_weight < sigma:
-			print(f"certificat for {s,t}: weight is {min_weight}, sigma is {sigma}")
 			return True,min_weight_path
 		else:
 			return False,min_weight_path

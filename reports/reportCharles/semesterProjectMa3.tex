@@ -261,7 +261,41 @@ We then proceed to define a time step, which represent what would be added to a 
 Needs to define $C_R$ in term of trains movements and then in term of arcs flow and explain why there only span one time step.
 
 
+\subsection{Dealing with different trains and stochastic events}
 
+\subsubsection{Handling different speeds}
+
+In the Flatland challenge, trains can have different speeds. The speeds will be defined as follow. The faster trains will have a speed of $1$, meaning that it takes them one time step to go between two nodes in the transition graph. Then all the other train will have a speed $v \in [0,1]$ with $v$ representing the percentage of the edge that is traveled by said train in one time step. For example, if a train a speed $1/3$, it will take 3 time steps to travel through an edge.
+
+Now suppose we have only two different speeds (the discussion easily generalize to $k$ different speeds), namely $1$ and $v$. Wlog we say that one of the two speeds is $1$ otherwise we would just rescale all of them.
+
+We can then build two time expanded networks, one for each speed. The tricky parts are the restrictions: they now span the two networks. 
+\todo{finish this part about restrictions}
+
+One could argue about building only one network combining the edges of our two networks. The reason we build two different network is for efficiency when finding minimum weighted path during the column generation pricing problem (see subsection \ref{pricing}).
+
+\subsubsection{Stochastic events}
+
+
+
+In the case of failure in the network, there will be not usable tracks (cells) for a certain period of time (known or unknown depending on the setting). In this case one can still use our method.
+When a failure happens, suppose $k$ trains break down among the $n$ in the network. The cell occupied by the broken trains will be unusable for a certain period of time $T$. We now propose multiple approaches supposing $T$ is unknown.
+\begin{itemize}
+
+
+
+		\item Restart from scratch all the trains, taking as initial position their position at failure time. When the trains are reactivated (failure is resolved) solve once more to move all the trains to their destination.
+		\item Reroute only the trains affected by the failure in a modified time expanded network
+
+\end{itemize}
+
+If $T$ is known one can modify the above approaches in the following way.
+\\
+
+
+
+
+The following sections considers one unique speed for all the trains and no stochastic events. This can easily be adapted  following the above discussion.
 \newpage
 \section{Minimum cost multicommodity flow}
 
@@ -327,8 +361,11 @@ In this section, we give a column generation solution procedure that works with 
 
 \subsubsection{Reformulation as a path flow problem}
 
-\todo[inline]{explain what is a path flow formulation}
-For this section we will restate our problem using path flows instead of arc flows as before. The problem then becomes: 
+
+For this section we will restate our problem using path flows instead of arc flows as before. In this paradigm, we suppose that we list all the possible paths between the sources and targets, $\mathcal{P}$. Then for each path $P \in \mathcal{P}$ we decide how much we send along this path with the variable $f(P)$.
+
+
+ The problem then becomes: 
 \begin{equation}
 	\begin{array}{ll@{}ll}
 		\text{minimize}  & \displaystyle\sum\limits_{P \in \mathcal{P}} &f(P)|P| &\\
@@ -459,14 +496,13 @@ The other direction is quite similar but works in the opposite way we just did.
 \end{proof}
 \subsubsection{Column generation method}
 
-With the above formulation, \todo{add numbers} we reduced the number of restrictions but increased the number of variables. 
-
-We then proceed to define a \emph{reduced master LP} on a reduced number of paths variables that can be increased if necessary to attain an optimal solution.
 
 
-Explain column generation method until we have to talk about pricing problem.
+
+\todo[inline]{Explain column generation method until we have to talk about pricing problem.}
 
 \paragraph{Pricing problem}
+\label{pricing}
 Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. 
 
 \subparagraph{Solving the pricing problem efficiently}
@@ -546,7 +582,7 @@ Cutting planes
 \label{results:arcsVSflow}
 
 Is the branch and bound process already implemented in Gurobi ? {\bfseries yes} in this case just ask to solve the reduced master LP first as an IP, if it fails do one step of the column generation method and then ask again after updating the variables if the IP is feasible.
-
+\todo[inline]{Explain the memory issues with the arc formulation}
 \idea[inline]{Check the percentage of integer solution in the relaxed formulation.}
 \subsection{Approximation comparison}
 \subsection{Comparison with reinforcement learning approach}

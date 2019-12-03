@@ -73,7 +73,7 @@ class MCFlow:
 		'''
 		self.m.optimize()
 		self.solution_complete = self.__extract_paths().copy()
-		self.solution = self.__translate_path_to_cell_coordinate(self.solution_complete)
+		self.solution = self.translate_path_to_cell_coordinate(self.solution_complete)
 		if not self.check_no_collisions_solution(self.solution):
 			raise ValueError("collisions detected")
 
@@ -332,7 +332,7 @@ class MCFlow:
 			return {}
 
 
-	def __translate_path_to_cell_coordinate(self, paths_old):
+	def translate_path_to_cell_coordinate(self, paths_old):
 		'''
 		translate the paths in term of internal representation to a sequence of cell coordinate 
 		
@@ -347,8 +347,8 @@ class MCFlow:
 		'''
 		paths = copy.deepcopy(paths_old)
 		paths_coord = {}
-		seen = {}
 		for agent ,path in paths.items():
+			seen = {}
 			clean_path = []
 			for elt in path:
 				if elt.startswith("source") or elt.startswith("sink"):

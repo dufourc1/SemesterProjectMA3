@@ -34,6 +34,9 @@ class MasterProblem:
         self.commodities = np.arange(numberOfCommodities)
         self.__setup(initialSolution)
         self.indexes = {x:0 for x in self.commodities}
+        self.stats = {
+            "variablesAdded": [0 for x in self.commodities]
+        }
 
 
     def __setup(self,initialSolution):
@@ -138,6 +141,7 @@ class MasterProblem:
                 print("skipped addition of path for commodity ",commodity)
                 skipped += 1
             else:
+                self.stats["variablesAdded"][commodity] += 1
                 self.pathVariables.append(path)
                 index = self.indexes[commodity] + 1
                 self.indexes[commodity]+= 1
@@ -155,4 +159,20 @@ class MasterProblem:
             raise ValueError("only adding already added columns")
         self.model = gurobipy.Model("Master Problem")
         self.build()
+    
+    def get_solution(self):
+        '''
+        return the paths that are used in form of dictionnary indexed by commodity index
+        path are represented as list of edges
+        '''
+        paths_to_get = {}
+        for v in self.model.getVars():
+            if v.x == 1:
+                inter = v.VarName.split("[")[-1]
+                inter = inter.split("]")[0]
+                c = int(inter.split(",")[0])
+                path = int(inter.split(",")[-1])
+                paths_to_get[c] = self.CommodityPath[(c,path)]
+
+        return paths_to_get
         

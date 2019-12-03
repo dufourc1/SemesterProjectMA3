@@ -397,6 +397,26 @@ class NetworkGraph(nx.DiGraph):
 	def getSwappingConstraints(self):
 		return self.swapping_constraints
 
+
+	def show_one_time_step(self, paths, jitter = 0.1, title = None,figsize = (20,20)):
+		'''
+		pretty plotting of the network graph for one time step
+		'''
+		plt.figure(figsize=figsize)
+		node_color = 'steel_blue'
+		pos = dict( (n, self.position(n, jitter)) for n in self.nodes() )
+		if paths is None:
+			nx.draw(self ,pos,with_labels = False, node_size=50)
+		else:
+			nx.draw(self ,pos,with_labels = False, node_size=1)
+		if paths is not None:
+			for i,node in enumerate(paths):
+				nx.draw_networkx_nodes(self, pos,node_size = 500,nodelist=[node],node_color = COLORS[i])
+		if title is not None:
+			plt.savefig(title)
+		plt.show()
+		
+
 class SuperNode(nx.DiGraph):
 	'''
 	node containing multiple 8 internal nodes representing the switches, but not allowing 180 turn
@@ -523,3 +543,6 @@ class SuperNode(nx.DiGraph):
 
 	def get_constraints(self):
 		return self.constraints
+
+	
+	

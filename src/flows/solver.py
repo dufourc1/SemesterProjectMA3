@@ -5,6 +5,7 @@ from src.flows.PricingProblem import PricingSolver
 from src.flows.InitialSolutionGenerator import InitialSolutionGenerator
 from src.flows.MasterProblem import MasterProblem
 from src.flows.lp_formulation import MCFlow
+from src.navigation.navigation_path import walk_many_paths
 
 import numpy as np
 import pandas as pd
@@ -12,6 +13,11 @@ import logging
 import time
 import gurobipy 
 
+def parse_tuple_from_txt(tuple_str):
+    interest = tuple_str.split("_")[0]
+    interest_left = interest.split("(")[1].split(",")[0]
+    interest_right = interest.split(")")[0].split(",")[1]
+    return (int(interest_left),int(interest_right))
 class Solver:
 
 	def __init__(self, logfile, method = "Column Generation",useDirections = False, useSpeeds = False,verbose = True):
@@ -42,7 +48,6 @@ class Solver:
 		self.logger = logging.getLogger("solver")
 		self.logger.info(f"New solver created of type {self.method}")
 
-
 	def build(self, env, timeHorizon):
 		'''
 		build the necessary data structure to solve the routing problem (TEN, dictionaries,...)
@@ -56,6 +61,7 @@ class Solver:
 					
 		self.logger.info(f"Building solver with {self.method} and a time expanded network of size {timeHorizon}")
 		self.stats = {}
+		self.iterations = 0
 		self.transitionNetwork = NetworkGraph(np.array(env.rail.grid.tolist()))
 		self.agents_information(env)
 		self.build_time_expanded_network(timeHorizon)
@@ -85,8 +91,12 @@ class Solver:
 		ValueError
 			if method of solver is not implemented
 		'''
+		start = time.time()
 		self.build(env,timeHorizon)
+		self.stats["running time"] = start
+
 		self.logger.info("Solving")
+
 		if self.method == "Column Generation":
 			return self.appply_column_generation()
 		elif self.method == "Arc Formulation":
@@ -94,7 +104,7 @@ class Solver:
 		else:
 			raise ValueError(f"unknown method {method} to solve the mc flow problem."+
 				 "\\Column Generation or  Arc Formulation are implemented.")
-		self.logger.info("Solving ended")
+		
 
 	def agents_information(self, env):
 		'''
@@ -139,11 +149,13 @@ class Solver:
 
 	def setup_column_generation(self):
 
-		self.logger.info("setting up column generation method")
+		self.logger.info("Setting up column generation method")
 		self.constraints,self.find_constraints = self.timeExpandedNetwork.get_topology_network()
+		self.logger.info("Got the constraints")
 		self.initialSolutionGenerator = InitialSolutionGenerator(self.timeExpandedNetwork,self.constraints,
 																 self.find_constraints,self.numberOfCommodities)
-		self.logger.info("finished set up for column generation method")
+		self.logger.info("Initial solution algorithm ready")
+		self.logger.info("Finished set up for column generation method")
 
 	def setup_arc_formulation(self):
 
@@ -165,6 +177,8 @@ class Solver:
 		if self.verbose:
 			print(f"score: {self.mcflow.m.objVal}")
 		self.logger.info("finished solving with arc formulation")
+		self.stats["running time"] = time.time()- self.stats["running time"]
+		self.solution_cell = self.mcflow.get_paths_solution()
 		return self.mcflow.m.objVal
 
 	def appply_column_generation(self):
@@ -181,20 +195,41 @@ class Solver:
 		pricingSolver = PricingSolver(self.timeExpandedNetwork.graph,self.constraints,
 										self.find_constraints,self.numberOfCommodities)
 		while flag:
-			print("iteration ",iteration)
 			self.master.solveRelaxedModel()
 			duals = self.master.getDualVariables()
 			pathsToAdd, flag = pricingSolver.get_columns_to_add(self.master.getDualVariables(),
 																self.master.constraintsActivated)
 			if flag:
-				#pprint.pprint(pathsToAdd)
-				print(f" commodities with updated paths: {pathsToAdd.keys()}")
 				iteration+= 1
+				self.iterations += 1
 				self.master.addColumn(pathsToAdd)
 		self.logger.info(f"finished solving with column generation after {iteration} iterations")
 		self.master.model.optimize()
+		self.stats["running time"] = time.time()- self.stats["running time"]
 		if self.verbose:
 			print(f"score: {self.master.model.objVal}")
+		self.solution_edge = self.translate_edges_ten_to_edge_transition(self.master.get_solution())
+		self.solution_cell = self.translate_edges_ten_to_cell_list(self.master.get_solution())
 		self.logger.info("finished solving integer formulation")
-
+		
 		return self.master.model.objVal
+
+	
+	def translate_edges_ten_to_cell_list(self,paths_dict):
+		result = {}
+		for c,path in paths_dict.items():
+			inter_list = [parse_tuple_from_txt(x[1].split("_t")[0]) for x in path if not x[1].startswith("sink")]
+			result[c] = [inter_list[2*i] for i in range(int(len(inter_list)/2))]
+			result[c].append(inter_list[-1])
+		return result
+
+
+	def translate_edges_ten_to_edge_transition(self,paths_dict):
+		result = {}
+		for c,path in paths_dict.items():
+			result[c] = [(x[0].split("_t")[0],x[1].split("_t")[0]) for x in path if not x[0].startswith("source") and not x[1].startswith("sink")]
+		return result
+
+	def run(self,env,envRenderer):
+		paths = [path for _,path in self.solution_cell.items()]
+		walk_many_paths(env,envRenderer,paths)

@@ -1,6 +1,6 @@
 import numpy as np
 import time
-from visualization.graphic import draw_multiple_paths
+from src.visualization.graphic import draw_multiple_paths
 
 def l2_norm(v, u):
     """
@@ -110,7 +110,11 @@ def walk_many_paths(env, env_renderer, paths, draw = False):
     
     actions_list = [actions_for_path(path, env.agents[k].direction) for k, path in enumerate(paths)]
     all_done = False
-        
+    ##TODO: resolve issue if trains start at the same position the next step does not work 
+    #putting all the agent in the good position
+    _ = env.step({i:1 for i in range(len(paths))})
+    env_renderer.render_env(show=True, show_predictions=False, show_observations=False)
+
     i = 0
     while all_done == False:
         
@@ -121,6 +125,7 @@ def walk_many_paths(env, env_renderer, paths, draw = False):
         for k in range(len(paths)):
             
             if  i < len(actions_list[k]):
+                if k == 1:   print(f"time {i}, action {actions_list[k][i]} for agent {k}")
                 actions_dict[k] = actions_list[k][i]
             else:
                 agents_done += 1
@@ -129,7 +134,7 @@ def walk_many_paths(env, env_renderer, paths, draw = False):
             all_done = True
         env.step(actions_dict)
         env_renderer.render_env(show=True, show_predictions=False, show_observations=False)
-        time.sleep(0.5)
+        time.sleep(0.03)
         i += 1
 
     return
