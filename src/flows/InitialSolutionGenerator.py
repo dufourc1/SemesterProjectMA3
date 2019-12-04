@@ -30,7 +30,7 @@ class InitialSolutionGenerator:
 		#save data
 		self.constraints = constraints
 		self.findConstraints = findConstraints
-		self.graph = deepcopy(ten.graph)
+		self.graph = ten.graph
 		
 
 		#get sources and sinks from the graph as a preprocessing step
@@ -71,7 +71,7 @@ class InitialSolutionGenerator:
 
 			#ensure we find a feasible solution for each commodity
 			NotFound = True
-
+	
 			while NotFound:
 				paths = self.pathFinder.findShortestPaths(s,t,5)
 				# if there is an issue we just take the next candidate graph
@@ -87,6 +87,7 @@ class InitialSolutionGenerator:
 							self.stats[f"not shortest path for {i}"] = 1
 						else:
 							self.stats[f"not shortest path for {i}"] += 1
+					
 
 			#reset all the weights since we change commodity
 			self.pathFinder.reset_weights()

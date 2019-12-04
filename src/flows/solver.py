@@ -72,7 +72,7 @@ class Solver:
 			self.setup_arc_formulation()
 		self.logger.info("Building completed")
 
-	def solve(self,env,timeHorizon):
+	def solve(self,env,timeHorizon = None):
 		'''
 		solve the multicommodity flow problem and keep the results in memory
 		
@@ -91,6 +91,9 @@ class Solver:
 		ValueError
 			if method of solver is not implemented
 		'''
+		self.max_time_steps = 4 * 2 * (env.width + env.height + 20)
+		if timeHorizon is None:
+			timeHorizon = self.max_time_steps
 		start = time.time()
 		self.build(env,timeHorizon)
 		self.stats["running time"] = start
@@ -114,19 +117,24 @@ class Solver:
 		----------
 		env : Faltland environment
 		'''
+		info,agent_to_drop = self.check_env(env)
+		if len(agent_to_drop) >0:
+			print(f"Had to drop {len(agent_to_drop)} agents, conflict with their starting position")
+			print([a.handle for a in agent_to_drop])
 		self.sources = []
 		self.sinks = []
 		self.directions = []
 		self.speeds = []
 		for agent in env.agents:
-			self.sources.append(agent.initial_position)
-			self.sinks.append(agent.target)
-			self.speeds.append(agent.speed_data['speed'])
-			self.directions.append(agent.direction)
+			if agent not in agent_to_drop:
+				self.sources.append(agent.initial_position)
+				self.sinks.append(agent.target)
+				self.speeds.append(agent.speed_data['speed'])
+				self.directions.append(agent.direction)
 		self.numberOfCommodities = len(self.sources)
 
 
-	def build_time_expanded_network(self, timeHorizon):
+	def build_time_expanded_network(self, timeHorizon= None):
 		'''
 		Build the time expanded network and get data structure for 
 		constraints handling (constraints (set) and dicitonnary to track edge to constraint)
@@ -135,6 +143,8 @@ class Solver:
 		----------
 		timeHorizon : int
 		'''
+
+
 		self.logger.info("Building time expanded network")
 		self.timeExpandedNetwork = TimeNetwork(self.transitionNetwork,depth = timeHorizon)
 		if self.useDirections:
@@ -233,3 +243,18 @@ class Solver:
 	def run(self,env,envRenderer):
 		paths = [path for _,path in self.solution_cell.items()]
 		walk_many_paths(env,envRenderer,paths)
+
+
+	def check_env(self,env):
+		info = {}
+		agents_to_drop = []
+		for agent in env.agents:
+			if agent.initial_position in info.keys():
+				info[agent.initial_position]["number"] += 1
+				info[agent.initial_position]["agents"].append(agent.handle)
+				agents_to_drop.append(agent)
+			else:
+				info[agent.initial_position] = {}
+				info[agent.initial_position]["number"] = 1
+				info[agent.initial_position]["agents"] = [agent.handle]
+		return info,agents_to_drop

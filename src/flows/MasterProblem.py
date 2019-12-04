@@ -156,7 +156,7 @@ class MasterProblem:
                             else:
                                 self.findConstraints_path[frozenset(c)] = [(commodity,index)]
         if skipped == len(list(pathToAdd.keys())):
-            raise ValueError("only adding already added columns")
+            print("only adding already added columns")
         self.model = gurobipy.Model("Master Problem")
         self.build()
     

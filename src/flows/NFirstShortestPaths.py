@@ -6,14 +6,13 @@ class PathFinder:
 
 	def __init__(self,graph):
 		#do a deep copy of the graph so we son't modify it 
-		self.graph = nx.DiGraph()
-		self.graph.add_edges_from(deepcopy(graph.edges))
+		self.graph = graph
 
 		#put a weight of one on all the edges in the graph
-		nx.set_edge_attributes(self.graph,1,"weight")
+		nx.set_edge_attributes(self.graph,1,"weight_path_finder")
 
 	def reset_weights(self):
-		nx.set_edge_attributes(self.graph,1,"weight")
+		nx.set_edge_attributes(self.graph,1,"weight_path_finder")
 
 
 	def findShortestPaths(self,source,target,n):
@@ -21,7 +20,7 @@ class PathFinder:
 		paths = []
 		for i in range(n):
 			#find shortest path as a list of nodes
-			path = nx.shortest_path(self.graph,source,target, weight = "weight", method= 'dijkstra')
+			path = nx.shortest_path(self.graph,source,target, weight = "weight_path_finder", method= 'dijkstra')
 			
 			#translate the paths from list of nodes to list of edges
 			path_pair_nodes = [path[i: i + 2] for i in range(len(path)-1)]
@@ -32,6 +31,6 @@ class PathFinder:
 
 			#update all the first edge on this path by adding 1 to the edge weight
 			for e in path_edges:
-				self.graph[e[0]][e[1]]["weight"] += 1
+				self.graph[e[0]][e[1]]["weight_path_finder"] += 1
 
 		return paths

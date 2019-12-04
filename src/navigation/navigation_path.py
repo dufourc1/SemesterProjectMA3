@@ -110,10 +110,10 @@ def walk_many_paths(env, env_renderer, paths, draw = False):
     
     actions_list = [actions_for_path(path, env.agents[k].direction) for k, path in enumerate(paths)]
     all_done = False
-    ##TODO: resolve issue if trains start at the same position the next step does not work 
-    #putting all the agent in the good position
-    _ = env.step({i:1 for i in range(len(paths))})
-    env_renderer.render_env(show=True, show_predictions=False, show_observations=False)
+
+    start_index = setup_env(env,paths,actions_list)
+
+   
 
     i = 0
     while all_done == False:
@@ -122,10 +122,9 @@ def walk_many_paths(env, env_renderer, paths, draw = False):
         agents_done = 0
         actions_dict = {}
         
-        for k in range(len(paths)):
+        for k in range(start_index,len(paths)):
             
             if  i < len(actions_list[k]):
-                if k == 1:   print(f"time {i}, action {actions_list[k][i]} for agent {k}")
                 actions_dict[k] = actions_list[k][i]
             else:
                 agents_done += 1
@@ -133,12 +132,46 @@ def walk_many_paths(env, env_renderer, paths, draw = False):
         if agents_done == len(paths):
             all_done = True
         env.step(actions_dict)
+        check_position(i+1,env,paths)
         env_renderer.render_env(show=True, show_predictions=False, show_observations=False)
         time.sleep(0.03)
         i += 1
 
-    return
-                        
+
+def check_position(time,env,paths):
+    for agent,path in enumerate(paths):
+        if  time < len(path) and  env.agents[agent].status != 3 and path[time] != env.agents[agent].position:
+            print(f"Error ! agent  {agent} is supposed to be at cell {path[time]} but is at {env.agents[agent].position} at time {time}")
+
+
+def setup_env(env,paths,actions_list,renderer = None):
+
+
+    #try first step for everyone 
+    _ = env.step({i:1 for i in range(len(paths))})
+    if renderer is not None:
+        renderer.render_env(show=True, show_predictions=False, show_observations=False)
+    return 0
+    # agents_to_remove = []
+    # for agent in range(len(paths)):
+    #     if env.agents[agent].status == 0:
+    #         agents_to_remove.append(agent)
+    
+    # if len(agents_to_remove) == 0:
+    #     return 0
+
+    # dict_action = {k:4 for k in agents_to_remove}
+    # dict_action.update({k:actions_list[k][0] for k in range(len(paths)) if k not in agents_to_remove})
+    # env.step(dict_action)
+
+    # dict_action = {k:1 for k in agents_to_remove}
+    # dict_action.update({k:4 for k in range(len(paths)) if k not in agents_to_remove})
+    # env.step(dict_action)
+    # dict_action = {k:actions_list[k][0] for k in agents_to_remove}
+    # dict_action.update({k:4 for k in range(len(paths)) if k not in agents_to_remove})
+    # env.step(dict_action)
+
+    # return 1
     
     
     
