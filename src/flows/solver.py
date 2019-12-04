@@ -118,9 +118,14 @@ class Solver:
 		env : Faltland environment
 		'''
 		info,agent_to_drop = self.check_env(env)
+		self.to_drop = agent_to_drop
+		self.dropped = [a.handle for a in agent_to_drop]
+		self.dealt_with = [True for i in env.agents]
 		if len(agent_to_drop) >0:
 			print(f"Had to drop {len(agent_to_drop)} agents, conflict with their starting position")
 			print([a.handle for a in agent_to_drop])
+			print(f" configuration is to clean problematic agent, deleting agent from env")
+			self.clean_env(env,self.to_drop)
 		self.sources = []
 		self.sinks = []
 		self.directions = []
@@ -131,6 +136,8 @@ class Solver:
 				self.sinks.append(agent.target)
 				self.speeds.append(agent.speed_data['speed'])
 				self.directions.append(agent.direction)
+			else:
+				self.dealt_with[agent.handle] = False
 		self.numberOfCommodities = len(self.sources)
 
 
@@ -154,8 +161,7 @@ class Solver:
 
 		self.logger.info("Finished building time expanded network")
 
-	def extractSolution(self):
-		raise NotImplementedError()
+
 
 	def setup_column_generation(self):
 
@@ -240,8 +246,25 @@ class Solver:
 			result[c] = [(x[0].split("_t")[0],x[1].split("_t")[0]) for x in path if not x[0].startswith("source") and not x[1].startswith("sink")]
 		return result
 
-	def run(self,env,envRenderer):
+
+	def prepare_paths(self,env):
 		paths = [path for _,path in self.solution_cell.items()]
+
+		paths_to_run = list(np.repeat([],self.numberOfCommodities))
+		index  = 0
+		for elt in self.dealt_with:
+			if elt:
+				paths_to_run.append(paths[index])
+				index += 1
+			else:
+				paths_to_run.append([])
+		return paths_to_run
+
+	def run(self,env,envRenderer):
+		self.clean_env(env,self.to_drop)
+		paths = [path for _,path in self.solution_cell.items()]
+		for elt in self.dropped:
+			paths.insert(elt,[])
 		walk_many_paths(env,envRenderer,paths)
 
 
@@ -258,3 +281,7 @@ class Solver:
 				info[agent.initial_position]["number"] = 1
 				info[agent.initial_position]["agents"] = [agent.handle]
 		return info,agents_to_drop
+	
+	def clean_env(self,env,agents_to_drop):
+		env.restart_agents()
+		#env.agents = [a for a in env.agents if a not in agents_to_drop]

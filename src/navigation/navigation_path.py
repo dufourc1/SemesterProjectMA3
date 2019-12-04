@@ -97,7 +97,7 @@ def walk_path(env, env_renderer, path, agent_handle):
         env_renderer.render_env(show=True, show_predictions=False, show_observations=False)
         time.sleep(0.5)
 
-def walk_many_paths(env, env_renderer, paths, draw = False):
+def walk_many_paths(env, env_renderer, paths,draw = False):
     """
     This functions that a list of paths and makes agents walk their own path simultaneously (the list is assumed to be
     ordered i.e. paths[k] is the path of agent k.)
