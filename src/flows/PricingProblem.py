@@ -7,8 +7,7 @@ from copy import deepcopy
 class PricingSolver:
 
 	def __init__(self,graph, constraints,findConstraints,numberOfCommodities):
-		self.graph = nx.DiGraph()
-		self.graph.add_edges_from([deepcopy(e) for e in graph.edges])
+		self.graph = graph
 		self.__set_sources_sinks(numberOfCommodities)
 		self.findConstraints = findConstraints
 
@@ -66,10 +65,10 @@ class PricingSolver:
 
 		# see remark in the report on non activated constraints to get why 
 		# default value is 0 (then the actual edge weight is 1)
-		nx.set_edge_attributes(self.graph,1,"weight")
+		nx.set_edge_attributes(self.graph,1,"weight_pricing_problem")
 		for i,constraint in enumerate(constraintsActivated):
 			for edge in constraint:
-				self.graph[edge[0]][edge[1]]["weight"] -= dualVariables[i]
+				self.graph[edge[0]][edge[1]]["weight_pricing_problem"] -= dualVariables[i]
 
 		
 
@@ -95,7 +94,7 @@ class PricingSolver:
 		'''
 
 		#compute shortest weighted path
-		min_weight_path = nx.shortest_path(self.graph,s,t,"weight")
+		min_weight_path = nx.shortest_path(self.graph,s,t,"weight_pricing_problem")
 		min_weight = self.compute_path_length(min_weight_path)
 		
 		if min_weight < sigma:
@@ -109,6 +108,6 @@ class PricingSolver:
 		for i in range(len(path)-1):
 			source, target = path[i], path[i+1]
 			edge = self.graph[source][target]
-			total_length += edge['weight']
+			total_length += edge['weight_pricing_problem']
 
 		return total_length

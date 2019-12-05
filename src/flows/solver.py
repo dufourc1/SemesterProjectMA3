@@ -12,6 +12,7 @@ import pandas as pd
 import logging
 import time
 import gurobipy 
+import collections
 
 def parse_tuple_from_txt(tuple_str):
     interest = tuple_str.split("_")[0]
@@ -262,7 +263,7 @@ class Solver:
 
 	def run(self,env,envRenderer):
 		self.clean_env(env,self.to_drop)
-		paths = [path for _,path in self.solution_cell.items()]
+		paths = [path for _,path in collections.OrderedDict(sorted(self.solution_cell.items())).items()]
 		for elt in self.dropped:
 			paths.insert(elt,[])
 		walk_many_paths(env,envRenderer,paths)

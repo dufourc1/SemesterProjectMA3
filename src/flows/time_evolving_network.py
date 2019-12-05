@@ -1,5 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import numpy as np
 
 def parse_tuple_from_txt(tuple_str):
     interest = tuple_str.split("_")[0]
@@ -123,7 +124,7 @@ class TimeNetwork:
 
 			#add the nodes to the graph
 			self.graph.add_node(source_name,pos = [agent,-1])
-			self.graph.add_node(sink_name,pos = [number_nodes +5 ,agent+0.2])
+			self.graph.add_node(sink_name,pos = [number_nodes +5 ,self.depth + agent+0.2])
 
 			#connect the source and sink nodes
 			for node in self.graph.nodes:
@@ -341,7 +342,7 @@ class TimeNetwork:
 		return name_updated
 
 
-	def show(self, details = False, paths = None):
+	def show(self, details = False, paths = None,color = False):
 		'''
 		visualisation of the time expanded graph
 		
@@ -355,14 +356,14 @@ class TimeNetwork:
 		fig = plt.figure(figsize=(largeur,longueur))
 		plt.rcParams['axes.facecolor'] = '#2e3037'
 		pos=nx.get_node_attributes(self.graph,'pos')
-		nx.draw(self.graph,pos, with_labels = details)
+		
 		weights = nx.get_edge_attributes(self.graph,'weight')
 		capacities = nx.get_edge_attributes(self.graph,'capacity')
 		labels = {}
 		if details:
 			for key in weights.keys():
 				labels[key] = (weights[key],capacities[key])
-
+		nx.draw(self.graph,pos, with_labels = details)
 		if paths is not None:
 			for agent,path in paths.items():
 				nx.draw_networkx_edges(self, pos,
