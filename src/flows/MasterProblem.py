@@ -1,5 +1,6 @@
 import gurobipy
 import numpy as np
+from time import time
 
 
 class MasterProblem:
@@ -21,7 +22,7 @@ class MasterProblem:
         constraints : list of sets
 
         findConstraints : dictionnary
-            links each edge in the graph to the constraint it goes through
+            links each edge in the graph to the constraint it goes through  
 
         numberOfCommodities : int        
         '''
@@ -36,7 +37,7 @@ class MasterProblem:
         self.indexes = {x:0 for x in self.commodities}
         self.stats = {
             "variablesAdded": [0 for x in self.commodities]
-        }
+                }
 
 
     def __setup(self,initialSolution):

@@ -39,7 +39,7 @@ class Solver:
 		verbose : bool, optional
 			Allow printing to the console, by default True
 		'''
-		self.stats = {}
+		self.stats = {"timeInit": None}
 		self.verbose = verbose
 		self.useDirections = useDirections
 		self.useSpeeds = useSpeeds
@@ -61,7 +61,7 @@ class Solver:
 		'''
 					
 		self.logger.info(f"Building solver with {self.method} and a time expanded network of size {timeHorizon}")
-		self.stats = {}
+		self.stats = {"timeInit": None}
 		self.iterations = 0
 		self.transitionNetwork = NetworkGraph(np.array(env.rail.grid.tolist()))
 		self.agents_information(env)
@@ -205,7 +205,10 @@ class Solver:
 		self.logger.info("solving with column generation")
 		flag = True
 		iteration = 1
+		start = time.time()
 		self.initialSolution = self.initialSolutionGenerator.getInitialSolution()
+		self.stats["timeInit"] = time.time()-start
+		self.logger.info("got initial solution")
 		self.master = MasterProblem(self.initialSolution,self.constraints,
 											self.find_constraints,self.numberOfCommodities)
 		self.master.build()

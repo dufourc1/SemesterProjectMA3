@@ -336,13 +336,13 @@ The minimum cost multicommodity flow can be formulate as an arc-flow integer pro
 \text{minimize}  & \displaystyle\sum\limits_{k=1}^{K}\sum_{(i,j)\in A} x_{ij}^k &\\
 \text{subject to}& \displaystyle\sum\limits_{k=1}^{K}   x_{ij}^k \leq 1,  &\forall (i,j) \in A \\
 & \displaystyle\sum\limits_{k=1}^{K}\sum_{(i,j) \in R}   x_{ij}^k \leq 1, \quad \quad  &\forall R \in C_R \\
-& \mathcal{N}x^k = b^k,  &\forall k \in \{1,\ldots,K\}\\
+& Nx^k = b^k,  &\forall k \in \{1,\ldots,K\}\\
 &                                                x_{ij}^k \in \{0,1\}, & \forall (i,j)\in A
 \end{array}
 \label{eq:arcFlow}
 \end{equation}
 
-\todo[inline]{define the $\mathcal{N}^k$ matrix, $b^k$ vector}
+\todo[inline]{define the $N^k$ matrix, $b^k$ vector}
 
 This formulation is clear and intuitive: for each commodity we decide whether or not it will use a specific arc at a certain time by setting $x_{ij}^k$ to $1$ or to $0$. But this formulation \eqref{eq:arcFlow} is not scalable due to its high number of restrictions and its integrability (see section \ref*{results:arcsVSflow} for a more detailed explanation). We then proceed to find new ways to solve this problem.
 
@@ -574,7 +574,6 @@ Cutting planes
 \idea[inline]{fill path one by one in decreasing order of flow or just branch and bound}
 
 
-
 \newpage
 \section{Experimental results}
 \label{results}
@@ -599,12 +598,18 @@ Is the branch and bound process already implemented in Gurobi ? {\bfseries yes} 
 \section{Conclusion}
 What can be improved
 \begin{itemize}
-	\item Initial solution generator
+	\item Initial solution generator (avoid infinite loop by randomizing order of priority)
 	\item merge unnecessary paths
 	\item better data structure 
 	\item more robust handling of environment (allow "spanning")
 \end{itemize}
 
+
+
+\newpage
+\section{Annexes}
+\subsection{More experiences}
+\subsection{Technical details about the implementation}
 
 
 \newpage
@@ -614,8 +619,6 @@ What can be improved
 \bibliographystyle{apa-good}
 \bibliography{ref}
 \addcontentsline{toc}{section}{References}
-
-
 
 
 \end{document}
