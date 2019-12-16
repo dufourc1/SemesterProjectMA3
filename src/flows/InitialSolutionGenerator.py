@@ -12,6 +12,8 @@ from src.flows.time_evolving_network import TimeNetwork
 from src.flows.NFirstShortestPaths import PathFinder
 
 
+#TODO allow for random reordering of the agents after certain time into the same loop
+
 class InitialSolutionGenerator:
 
 	def __init__(self, ten:TimeNetwork, constraints, findConstraints, numberOfCommodities):
