@@ -8,6 +8,7 @@ def parse_tuple_from_txt(tuple_str):
     interest_right = interest.split(")")[0].split(",")[1]
     return (int(interest_left),int(interest_right))
 
+#TODO: only create relevant connections wrt to the sources --> reduce size of the graph
 
 COLORS = ['b','g','r','c','m','y']
 ORIENTATION_INBOUND = {0:"N",1:"E",2:"S",3:"W"}
