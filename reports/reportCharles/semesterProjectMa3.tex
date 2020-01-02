@@ -23,6 +23,8 @@
 \usepackage[justification=centering]{caption}
 \usepackage{eqnarray}
 
+
+
 \makeatletter
 \@addtoreset{section}{part}
 \makeatother  
@@ -148,8 +150,10 @@ Jonas Racine
 %----------------------------------------------------------------------------------------
 %   LOGO SECTION
 %----------------------------------------------------------------------------------------
+\centering
+ \includegraphics[width=0.5\linewidth]{img/logo.eps}\\ % Include a department/university logo - this will require the graphicx package
 
- \includegraphics[width=0.5\linewidth]{img/logo.eps}\\[1cm] % Include a department/university logo - this will require the graphicx package
+ 
  
 %----------------------------------------------------------------------------------------
 
@@ -179,56 +183,100 @@ Jonas Racine
 \pagenumbering{arabic}
 \section{Introduction}
 
+All the code can be found in the \cite{GIT}.
 
 
-%\begin{figure}[H]
-%\centering
-%\includegraphics[scale=0.4]{img/flatland.png}
-%\caption{Example of the railway network environment from the Flatland challenge}
-%\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[scale=0.4]{img/flatland.png}
+\caption{Example of the railway network environment from the Flatland challenge}
+\end{figure}
 
 
-\newpage
-\section{Flatland challenge}
 
-\newpage
 
-\section{Literature review}
-\subsection{Double vertex graph}
-\subsection{MAPF}
 
 
 \newpage
 \section{Modelization of the environment}
+
+To have a formulation of our problem in term of dynamic multicommodity flows (\emph{multicommodity flows over time}), we need to first define the graph representing the railway network from the 2D grid world. Then we need to embed the time component in our model using a time expanded network, bringing our problem back to a static multicommodity flow problem.
+We first model the problem with a unique speed for all trains.
+
 \subsection{Transition network}
 
-The transition network is an oriented graph $G = (V,A)$ that represents the original 2D grid world.
+We create a graph to model all the possible switches and rails in the rail network from Flatland. In order to do so, we model each cell as a super node containing 8 internal nodes, as can be seen in Figure \ref{fig:simple_super_node}. These internal nodes are responsible for correctly implementing the different transitions the original cell allows. 
+
 
 \begin{figure}[h]
-	\begin{minipage}{0.475\linewidth}
-		\centering
-		\includegraphics[width=\linewidth]{img/firstgraph2Dworld.png}
-		\label{fig:env}
-		\vspace{0cm}
-		\caption{Flatland environment example. Randomly generated $7\times 7$ grid with 3 trains.}
-	\end{minipage}
-	\hfill
 	\begin{minipage}{0.5\linewidth}
-		\centering
-		\includegraphics[width=\linewidth]{img/first_graph.png}
-		\caption{transition graph extracted from the flatland environment on the left.}
+	\centering
+	\includegraphics[width=0.9\linewidth]{img/super_node.jpg}
+	\caption{Super node representing the cell represented in Figure \ref{fig:cell super node example}. The blue rectangles represent the internal nodes of the cell, where the big white rectangle represents the super node.}
+	\label{fig:simple_super_node}
+	\end{minipage}
+	\begin{minipage}{0.5\linewidth}
+	\centering
+	\includegraphics[width=0.5\linewidth]{img/switch.png}
+	\caption{A switch from the railway network.}
+	\vspace{1.6cm}
+	\label{fig:cell super node example}
 	\end{minipage}
 \end{figure}
 
+The transition network is an oriented graph $G = (V,A)$ that represents the original 2D grid world. Figure \ref{fig:both} shows an example of a randomly generated environment and its corresponding transition graph.
+
+\begin{figure}[h]
+	\begin{minipage}{0.3\linewidth}
+		
+		
+		
+		\includegraphics[width=\linewidth]{img/env.png}
+		\caption*{Flatland environment.}
+		\label{fig:env}
+	\end{minipage}
+	\begin{minipage}{0.6\linewidth}
+		\includegraphics[width=\linewidth]{img/env_graph.jpg}
+		\caption*{Transition graph.}
+	\end{minipage}
+	\caption{Randomly generated $7 \times 5$ grid and its extracted transition graph.}
+	\label{fig:both}
+\end{figure}
+
+
+Why did we not use a single node to represent each cell and connect it to its neighbors if there is a connection between them? The problem with the simple node modelization is that it allows transition that are not represented in the original railway network. Take for example the switch in Figure \ref{fig:cell super node example}: with a simple node representation, a train coming from a cell below could go to the left whereas in the original cell it should not be possible.
+\newline
+
+There exists alternatives to model railway networks, namely the double vertex graphs (see for example the modelization done in  \cite{BachelorThesis}). Those were not considered here since they are not simple directed graphs. Indeed they have a particular definition of paths, so the usual flows algorithm would not be straightforward to apply.
+
+
+
+
+
 \subsection{Time expanded network}
 \label{ten}
-We give a definition inspired from \cite[p.~19]{Skutella2008AnIT}:
+
+We now have to include the time component in our design. We will use a time expanded network to bring back our dynamic multicommodity flow problem to a static formulation. 
+
+Intuitively we define a discrete time step (given by the environment in our case) and a maximum time horizon $T$. Now we do $T$ copies of the nodes of our graph, and only allow transition from one time step to another. Figure \ref{fig:ten intuition} shows the intuition by drawing a path in a time expanded network.
+
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.6\linewidth]{img/Example-of-links-in-a-time-expanded-network.png}
+	\caption{Explanation of the intuition of time expanded networks with only the path $\{1,2,4\}$ drawn in time (image from \cite{TENExample}).}
+	\label{fig:ten intuition}
+\end{figure}
+
+
+We now give a formal definition from \cite[p.~19]{Skutella2008AnIT}:
 \begin{madef}[Time-expanded network]
 	 Let $G = (V, E)$ be a network with capacities $u$ and costs $c$ on the arcs. For a given time horizon $T\in \mathds{Z}_{>0}$ ,	the corresponding \emph{time-expanded network} $G^T = (V^T, E^T)$ with capacities and costs on the arcs
 	is defined as follows. For each node $v\in V$ we create $T$ copies $v_0 , v_1 , \ldots, v_{T-1} $, that is,
 	$$V^T := \{v_\theta | v \in V, \theta = 0, 1, \ldots, T-1\}.$$
 	For each arc $e = (v, w) \in E$, there are $T-1$  copies $e_0,e_1,\ldots,e_{T-2}$ where arc $e_\theta$ connects
-	node $v_\theta$ to node $w_{\theta+1}$ . Arc $e_\theta$ has capacity $u_{e_{\theta}}:= u_{e_\theta}$ and cost $c_{e_{\theta}}:= c_{e_\theta}$. Moreover, $E^T$ contains
+	node $v_\theta$ to node $w_{\theta+1}$ . Arc $e_\theta$ has capacity $u_{e_{\theta}}:= u_{e}$ and cost $c_{e_{\theta}}:= c_{e}$. Moreover, $E^T$ contains
 	\emph{waiting} arcs $(v_\theta , v _{\theta+1})$ for $v \in V$ and $\theta = 0,\ldots, T-2$. The capacity of waiting arcs is $1$
 	and they have cost $1$. Summarizing, the set of arcs $E^T$ is given by
 	\begin{align*}
@@ -237,8 +285,9 @@ We give a definition inspired from \cite[p.~19]{Skutella2008AnIT}:
 	 \end{align*}
 \end{madef}
 
-An example of a time-expanded network is given in Figure \ref{fig:timeExpandedNetwork}. Notice that the size of the	time-expanded network $G^T$ is linear in $T$ and therefore only pseudo-polynomial in the input
-size.
+Notice that the size of the	time-expanded network $G^T$ is linear in $T$ and therefore only pseudo-polynomial in the input size.
+
+
 
 
 We then proceed to define a time step, which represent what would be added to a time expanded graph, were we to expand the horizon by one.
@@ -248,9 +297,6 @@ We then proceed to define a time step, which represent what would be added to a 
 	It represents the set of all edges starting at time $\theta$.
 \end{madef}
 
-\todo[inline]{explain a bit more}
-\todo[inline]{add an example as a Figure}
-
 
 \begin{remark}
 	There are no cycles in the time expanded network since $\nexists (v_\theta,w_{\tilde{\theta}}) \in E^T$ with $\tilde{\theta} < \theta$.
@@ -258,19 +304,73 @@ We then proceed to define a time step, which represent what would be added to a 
 	
 \subsection{Restrictions}
 \label{sec:restrictions}
-Needs to define $C_R$ in term of trains movements and then in term of arcs flow and explain why there only span one time step.
+In the environment from Flatland some position are forbidden: two trains cannot be at the same cell at the same time, and to trains can collide, meaning they cannot swap positions.  We will first define the restrictions needed on the transition network and then explain how to impose the same restriction on the time expansion of this network.
+
+A restriction will impose that among a certain set of edges, only one of them can be used at the same time.
+
+\subsubsection{On the transition network}
+
+
+
+\begin{itemize}
+	\item Position constraint\\
+	All the edges leading to specific supernode should be \emph{restricted}. Using these restrictions, we ensure that at any time step, at most one train will be in any cell, thus avoiding collisions.
+	\item Swapping constraint
+	All pairs of edges between two supernodes shouls be \emph{restricted}. It is trivial to see that these restrictions will be enough to prevent swapping.
+\end{itemize}
+
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\linewidth]{img/rail_split_edge.jpg}
+	\caption{Representation of some restrictions in the transition network. All the edges colored in the same color (blue or red) cannot be used at the same time. The blue edges represent a position restriction and the red edges a swapping restriction. }
+	\label{fig:restrictions}
+\end{figure}
+
+\subsubsection{On the time expanded network}
+\label{restrictions}
+
+The restrictions on the time expanded network can be easily derived from the restrictions described before. Suppose we have a restriction on  $\left\{(u,v),(i,j)\right\}$. In the time expanded network, we will have restrictions for all sets $\left\{(u_{t},v_{t+1}),(i_{t},j_{t+1})\right\} \ \forall t \in \{1,\ldots,T-1\}$. 
+
+We also have to add to the position constraints the waiting edges. Let's say we consider a cell $i$ with its corresponding supernode, all the waiting edges of this supernode should be added to the position constraint linked to cell $i$.
+
+\begin{remark}
+	Due to the nature of the restrictions, a path in the time expanded network can only take one edge per restriction. Indeed, otherwise it would mean that at a certain time $t$, the path takes two edges in the transition network at the same time which is impossible.
+\end{remark}
+
 
 
 \subsection{Dealing with different trains and stochastic events}
 
-\subsubsection{Handling different speeds}
+For now, the trains were supposed to all have the same speed and there were supposed to be no changes in the underlying railway network over time. This is not realistic, so in order to have a better model, we discuss now what could be implemented to handle a system with multiple speeds and random breakdown of trains.
+
+
+\subsubsection{Different speeds}
 
 In the Flatland challenge, trains can have different speeds. The speeds will be defined as follow. The faster trains will have a speed of $1$, meaning that it takes them one time step to go between two nodes in the transition graph. Then all the other train will have a speed $v \in [0,1]$ with $v$ representing the percentage of the edge that is traveled by said train in one time step. For example, if a train a speed $1/3$, it will take 3 time steps to travel through an edge.
 
-Now suppose we have only two different speeds (the discussion easily generalize to $k$ different speeds), namely $1$ and $v$. Wlog we say that one of the two speeds is $1$ otherwise we would just rescale all of them.
+Now suppose we have only two different speeds (the discussion easily generalize to $k$ different speeds), namely $1$ and $v$ (w.l.o.g. we say that one of the two speeds is $1$ otherwise we would just rescale all of them).
 
-We can then build two time expanded networks, one for each speed. The tricky parts are the restrictions: they now span the two networks. 
-\todo{finish this part about restrictions}
+We can then build two time expanded networks, one for each speed. The tricky parts are the restrictions: they now span the two networks. Indeed, now one train takes $v^-1$ time steps to go through an edge, while the other takes only one time step, so it is necessary to have the constraints spanning the 2 networks.
+
+
+The way to do it is to have the fastest train's network as a point of reference. This one has the usual constraints, to which we had edges from the other graph. Take a constraint, and look at the edges contained in it. You then take the corresponding edges (representing the same railway piece), and add them for the corresponding time steps.
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.7\linewidth]{img/ten_constraints_multiple_constraints.jpg}
+	\caption{On the left the fast expanded network, on the right the slow ($v = 0.5$). The red edges on the right will belong to both the red and blue restrictions showed on the left (fictional restriction sets).}
+	\label{fig:multiple constraints}
+\end{figure} 
+
+For example if the second speed was $0.5$, we would have edges $(u_0,v_1)$,$(u_1,v_2)$ in the fast time expanded network, and only $(u_0,v_2)$ in the slow network. For the restriction containing $(u_0,v_1)$ we would have to add $(u_0,v_2)$ and the same for the one containing $(u_1,v_2)$. Figure \ref{fig:multiple constraints} shows this.
+
+
+
+
+A formal way to say this would be that for any edge $(u_{t1},v_{t2})'$ in the slow network it has to be added to any constraint from the fast network $(u_t,v_{t+1})$ if $t1\geq t$ and $t2 \leq t+1$.
+\newline
+
 
 One could argue about building only one network combining the edges of our two networks. The reason we build two different network is for efficiency when finding minimum weighted path during the column generation pricing problem (see subsection \ref{pricing}).
 
@@ -278,8 +378,8 @@ One could argue about building only one network combining the edges of our two n
 
 
 
-In the case of failure in the network, there will be not usable tracks (cells) for a certain period of time (known or unknown depending on the setting). In this case one can still use our method.
-When a failure happens, suppose $k$ trains break down among the $n$ in the network. The cell occupied by the broken trains will be unusable for a certain period of time $T$. We now propose multiple approaches supposing $T$ is unknown.
+In the case of failure in the network, there will be  unusable tracks (cells) for a certain period of time (known or unknown depending on the setting). In this case one can still use our method.
+When a failure happens, suppose $k$ trains break down among the $n$ in the network. The cells occupied by the broken trains will be unusable for a certain period of time $T$. We now propose multiple approaches.
 \begin{itemize}
 
 
@@ -288,9 +388,6 @@ When a failure happens, suppose $k$ trains break down among the $n$ in the netwo
 		\item Reroute only the trains affected by the failure in a modified time expanded network
 
 \end{itemize}
-
-If $T$ is known one can modify the above approaches in the following way.
-\\
 
 
 
@@ -311,7 +408,7 @@ We now formalize the definition of restriction as described in section \ref*{sec
 
 
 
-We also introduce a notation we will be heavily using in this section:
+We also introduce a notation:
 \begin{madef}
 	Given $\alpha$ a set,
 	\[
@@ -342,16 +439,27 @@ The minimum cost multicommodity flow can be formulate as an arc-flow integer pro
 \label{eq:arcFlow}
 \end{equation}
 
-\todo[inline]{define the $N^k$ matrix, $b^k$ vector}
+Where $N^k$ is the -arc adjacency matrix, and $b^k$ is such that 
+\[
+b^k_i=\left\{
+\begin{array}{ll}
+1 \text{ if node } i \text{ is a source for commodity } k\\
+-1 \text{ if node } i \text{ is a sink for commodity } k\\
+0 \text{ otherwise}\\
+\end{array}
+\right.
+\]
 
-This formulation is clear and intuitive: for each commodity we decide whether or not it will use a specific arc at a certain time by setting $x_{ij}^k$ to $1$ or to $0$. But this formulation \eqref{eq:arcFlow} is not scalable due to its high number of restrictions and its integrability (see section \ref*{results:arcsVSflow} for a more detailed explanation). We then proceed to find new ways to solve this problem.
+
+We first relax \eqref{eq:arcFlow} by allowing $x_{ij}^k \geq 0$ while letting the other restrictions untouched. We explain in section \ref{relaxation} how to go back to an integral solution afterwards.
+
+This formulation is clear and intuitive: for each commodity we decide whether or not it will use a specific arc at a certain time by setting $x_{ij}^k$ to $1$ or to $0$. But this formulation \eqref{eq:arcFlow} is not scalable due to its high number of restrictions and variables (see section \ref{results:arcsVSflow} for a more detailed explanation). We then proceed to find new ways to solve this problem.
 
 
-\subsubsection{Relaxation and approximation}
 
-We first relax \eqref{eq:arcFlow} by allowing $x_{ij}^k \geq 0$ while letting the other restrictions untouched. 
 
-We then use a cutting plane algorithm to solve the IP.
+
+
 
 
 
@@ -489,25 +597,49 @@ f(\mathcal{P})^T \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \r
 
 Which is exactly what we aimed to obtain.
 
-The other direction is quite similar but works in the opposite way we just did.
+The other direction is similar.
 
 	 
 	 
 \end{proof}
 \subsubsection{Column generation method}
 
+For each train, we will only use one path in the time expanded network, so even if the path formulation \eqref{eq:pathFormulationPrimal} leads to an exponential number of variables, actually only $K$ of them will be useful in the end. 
+
+With this remark in mind, the purpose of the column generation method is to gradually improve a feasible solution containing few variables until we have the optimal solution. The idea is that in a few iterations we should be able to find the optimal solution, leading us to consider a small number of variables compared to all the possible paths set.
+\\
+
+We define the restricted linear program on a basis (set of variables) as the linear program \eqref{eq:pathFormulationPrimal} setting all variables at $0$ except for the variable contained in the basis.\\
 
 
 
-\todo[inline]{Explain column generation method until we have to talk about pricing problem.}
+\begin{algorithm}[H]
+	\SetAlgoLined
+	\KwResult{Optimal solution to \eqref{eq:pathFormulationPrimal}}
+	\KwIn{Basis: initial feasible solution}
+
+	\While{solution optimal}{
+	Solve restricted linear program on the basis\;
+	Solve pricing problem to find useful variables to add\;
+	Add these variables to the basis\;
+	}
+
+	Return solution of restricted linear program on the basis\;
+	
+	
+	\caption{Column generation algorithm}
+\end{algorithm}
+
+
 
 \paragraph{Pricing problem}
 \label{pricing}
-Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. 
+
+Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. Indeed 
+\todo[inline]{explain why we only consider one equation --> this is the one violated if a variable that could improve the cost is not in the basis.}
 
 \subparagraph{Solving the pricing problem efficiently}
-\todo[inline]{Explain why $0$ is the dual value of empty restriction (see notebook)}
-Because of the particular nature of the restrictions in our problem, one can see that no restriction can span more than one time step in the time expanded network, and that a path cannot have two edges in the same time step (see section \ref*{ten}). 
+Because of the particular nature of the restrictions in our problem, one can see that no restriction can span more than one time step in the time expanded network, and that a path cannot have two edges in the same time step (see section \ref*{restrictions}). 
 
 Based on these observations, we define the cost of an arc in the graph as:
 \begin{equation*}
@@ -565,13 +697,14 @@ Where we say that a path $p^*$ does not have conflicts with a set of paths $P$ i
 
 
 
-\subsubsection{Relaxation and approximation}
+\subsection{Relaxation and approximation}
+\label{relaxation}
+\todo[inline]{check article from Jonas}
 
-Once we solved the problem above, we do not have an integral multicommodity flow, hence the solution is not feasible. In order to get a feasible solution from the fractional flow, we use the   following approximations:
 
-Cutting planes
+Actually taken care of by \cite{gurobi}.
 
-\idea[inline]{fill path one by one in decreasing order of flow or just branch and bound}
+
 
 
 \newpage
@@ -580,18 +713,17 @@ Cutting planes
 \subsection{Arc formulation and flow formulation}
 \label{results:arcsVSflow}
 
-Is the branch and bound process already implemented in Gurobi ? {\bfseries yes} in this case just ask to solve the reduced master LP first as an IP, if it fails do one step of the column generation method and then ask again after updating the variables if the IP is feasible.
 \todo[inline]{Explain the memory issues with the arc formulation}
-\idea[inline]{Check the percentage of integer solution in the relaxed formulation.}
-\subsection{Approximation comparison}
+
 \subsection{Comparison with reinforcement learning approach}
+\todo[inline]{Mostly about the difference in terms of approach}
 
 
 \newpage
 \section{On the mixed RL-CO approach}
-\subsection{Ideas}
-\subsection{Theoretical approach}
-\subsection{Results}
+
+
+
 
 \newpage
 
@@ -601,8 +733,13 @@ What can be improved
 	\item Initial solution generator (avoid infinite loop by randomizing order of priority)
 	\item merge unnecessary paths
 	\item better data structure 
-	\item more robust handling of environment (allow "spanning")
+	\item more robust handling of environment (allow "spawning")
 \end{itemize}
+
+
+Other approaches such are double vertex graph (\cite{BachelorThesis}) and multiple agent path finding (MAPF) could be considered, but were not in this project.
+
+
 
 
 
@@ -610,11 +747,13 @@ What can be improved
 \section{Annexes}
 \subsection{More experiences}
 \subsection{Technical details about the implementation}
+\todo[inline]{ we only have to sum over activated constraints.}
 
 
 \newpage
 
  \nocite{*} 
+
 
 \bibliographystyle{apa-good}
 \bibliography{ref}

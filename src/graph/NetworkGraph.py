@@ -375,11 +375,11 @@ class NetworkGraph(nx.DiGraph):
 		'''
 		pretty plotting of the network graph
 		'''
-		plt.figure(figsize=(50,50))
+		plt.figure(figsize=(12,6))
 		node_color = 'steel_blue'
 		pos = dict( (n, self.position(n, jitter)) for n in self.nodes() )
 		if paths is None:
-			nx.draw(self ,pos,with_labels = False, node_size=50)
+			nx.draw(self ,pos,with_labels = False, node_size=20)
 		else:
 			nx.draw(self ,pos,with_labels = False, node_size=1)
 		if paths is not None:
