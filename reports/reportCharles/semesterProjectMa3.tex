@@ -94,11 +94,7 @@
 
 
 \usepackage{fancyhdr}
-\pagestyle{fancy}
-%\lfoot{Charles DUFOUR}
-%\rfoot{\today}
-%\fancyhead[R]{}
-\fancyhead[L]{}
+
 
 \author{Charles Dufour}
 \title{Bachelor Project: \\
@@ -162,18 +158,29 @@ Jonas Racine
 
 \end{titlepage}
 
+\thispagestyle{empty}
+\clearpage\null
 
 
 
 \newpage
-
+\pagestyle{fancy}
+%\lfoot{Charles DUFOUR}
+%\rfoot{\today}
+%\fancyhead[R]{}
+\fancyhead[L]{}
 
 
 
 
 \tableofcontents
 \pagenumbering{gobble}
+
 \newpage
+
+
+\thispagestyle{empty}
+\clearpage\null\newpage
 
 
 
@@ -451,7 +458,6 @@ b^k_i=\left\{
 \]
 
 
-We first relax \eqref{eq:arcFlow} by allowing $x_{ij}^k \geq 0$ while letting the other restrictions untouched. We explain in section \ref{relaxation} how to go back to an integral solution afterwards.
 
 This formulation is clear and intuitive: for each commodity we decide whether or not it will use a specific arc at a certain time by setting $x_{ij}^k$ to $1$ or to $0$. But this formulation \eqref{eq:arcFlow} is not scalable due to its high number of restrictions and variables (see section \ref{results:arcsVSflow} for a more detailed explanation). We then proceed to find new ways to solve this problem.
 
@@ -632,11 +638,16 @@ We define the restricted linear program on a basis (set of variables) as the lin
 
 
 
+
+
+
 \paragraph{Pricing problem}
 \label{pricing}
 
-Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. Indeed 
-\todo[inline]{explain why we only consider one equation --> this is the one violated if a variable that could improve the cost is not in the basis.}
+Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. Indeed for any basis use for the restricted linear program, the conditions \eqref{eq:cond1} and \eqref{eq:cond3} are automatically respected (can be seen by noticing that these conditions only depend on element in the basis of the LP). The only indication of the basis being not optimal is the second condition.
+\\
+
+If we find a path with a negative reduced cost, we can add it to the basis and improve our actual cost. We see now that the pricing problem can be efficiently solved.
 
 \subparagraph{Solving the pricing problem efficiently}
 Because of the particular nature of the restrictions in our problem, one can see that no restriction can span more than one time step in the time expanded network, and that a path cannot have two edges in the same time step (see section \ref*{restrictions}). 
@@ -693,25 +704,49 @@ We produce an initial feasible solution using a greedy algorithm.\\
 
 $ $\\
 
-Where we say that a path $p^*$ does not have conflicts with a set of paths $P$ if using formulation \eqref{eq:pathFormulationPrimal} and putting all $f(p) = 1 \quad \forall p\in P \cup \{p^*\}$ all the restrictions are respected.
+Where we say that a path $p^*$ does not have conflicts with a set of paths $P$ if using formulation \eqref{eq:pathFormulationPrimal} and putting all $f(p) = 1 \quad \forall p\in P \cup \{p^*\}$ all the constraints are satisfied.
 
 
 
-\subsection{Relaxation and approximation}
+\subsubsection{Relaxation and approximation}
 \label{relaxation}
-\todo[inline]{check article from Jonas}
 
+After having a set of optimal paths for the fractional formulation of \eqref{eq:pathFormulationPrimal} we have to get an integral solution.
+\todo[inline]{check article from Jonas:  \cite{BranchAndCut}}
 
-Actually taken care of by \cite{gurobi}.
 
 
 
 
 \newpage
 \section{Experimental results}
+
+To solve the linear programs we use the commercial solver \cite{gurobi}. To obtain the integral solution we use their optimized algorithms which might differ from what is described in section \ref{relaxation}. The rest of the implementation is in Python and can be found at \cite{GIT}.
+
 \label{results}
 \subsection{Arc formulation and flow formulation}
 \label{results:arcsVSflow}
+\subsubsection{Arc formulation}
+
+\todo[inline]{talk about limitations}
+
+\subsubsection{Flow formulation}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{img/time_repartition.png}
+	\caption{Average time division in the column generation method.}
+	\label{fig:time repartition}
+\end{figure}
+
+
+\subsubsection{Comparison of the two formulations}
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{img/comparison.png}
+	\caption{Comparison of the average relative speeds between the two formulation. The values were obtained by doing multiple runs on different random environments and computing the relative difference between the two methods.}
+	\label{fig:comparison}
+\end{figure}
 
 \todo[inline]{Explain the memory issues with the arc formulation}
 
