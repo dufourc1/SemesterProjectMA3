@@ -22,8 +22,8 @@
 \usepackage{ dsfont }
 \usepackage[justification=centering]{caption}
 \usepackage{eqnarray}
-
-
+\usepackage{blindtext}
+\usepackage{csquotes}
 
 \makeatletter
 \@addtoreset{section}{part}
@@ -188,19 +188,20 @@ Jonas Racine
 
 
 \pagenumbering{arabic}
-\section{Introduction}
+\section*{Introduction}
+\label{sec:intro}
+\addcontentsline{toc}{section}{\nameref{sec:intro}}
 
-All the code can be found in the \cite{GIT}.
+$\quad$ We tackle the \emph{vehicle routing problem (VRP)} and \emph{vehicle re-scheduling problem (VRSP)} through an online competition. We first develop a particular graph to model the underlying railway network. We then formulate our problem as a \emph{dynamic minimum cost multicommodity flow problem}, and derive the explicit column generation method to solve it efficiently.
 
-
-
-\begin{figure}[H]
-\centering
-\includegraphics[scale=0.4]{img/flatland.png}
-\caption{Example of the railway network environment from the Flatland challenge}
-\end{figure}
+All the code can be found in this repository (\cite{GIT}).
 
 
+
+
+
+\section{Flatland Challenge}
+\todo[inline]{\blindtext \\ \blindtext}
 
 
 
@@ -712,25 +713,43 @@ Where we say that a path $p^*$ does not have conflicts with a set of paths $P$ i
 \label{relaxation}
 
 After having a set of optimal paths for the fractional formulation of \eqref{eq:pathFormulationPrimal} we have to get an integral solution.
-\todo[inline]{check article from Jonas:  \cite{BranchAndCut}}
+
+For now this is done by \cite{gurobi} automatically, using branch-price-and-cut algorithms when asked to solve the restricted master problem \eqref{eq:pathFormulationPrimal} with integer variables. A good overview of the methods can be found in \cite{BranchAndCut}, even if it might be outdated by modern software.
 
 
 
 
 
 \newpage
-\section{Experimental results}
+\section{Results}
 
 To solve the linear programs we use the commercial solver \cite{gurobi}. To obtain the integral solution we use their optimized algorithms which might differ from what is described in section \ref{relaxation}. The rest of the implementation is in Python and can be found at \cite{GIT}.
 
+
+All experiments are done with constant speeds for all the train and no stochastic events.
+
 \label{results}
-\subsection{Arc formulation and flow formulation}
+\subsection{Experimental results}
 \label{results:arcsVSflow}
+
 \subsubsection{Arc formulation}
 
-\todo[inline]{talk about limitations}
+The arc formulation proved to be efficient for very small instances of the problem (either in term of size of the grids or in term of the number of agents present). But for bigger instances, it proved inadequate: it took more than 30 minutes to guide 3 agents in a  $(30 \times 30)$ complex environment, while it took the flow formulation approximately 3 minutes.
+
+Figure \ref{fig:numberVar} shows why the arc formulation is inefficient by showing the average number of variables for one commodity in function of the size of the instance.
+
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=\linewidth]{img/number_variables.jpg}
+	\caption{Average number of variables in term of size of the instance (grid size of the environment).}
+	\label{fig:numberVar}
+\end{figure}
 
 \subsubsection{Flow formulation}
+
+Figure \ref{fig:time repartition} shows the time division of the solver using column generation. We see that the initial solution algorithm ends up being the bottleneck of our algorithm. \enquote{In fact, finding a feasible solution of a linear program (or a basic feasible solution) is almost as difficult as finding an optimal solution.} (\cite{networkflows}).
+
 
 \begin{figure}[h]
 	\centering
@@ -739,8 +758,18 @@ To solve the linear programs we use the commercial solver \cite{gurobi}. To obta
 	\label{fig:time repartition}
 \end{figure}
 
+The greedy algorithm is probably not the best way to go for this problem. Maybe trying to find first a partition of the railway network and working on each section independently would improve the initial solution algorithm.
 
 \subsubsection{Comparison of the two formulations}
+
+While we have seen that the number of variables for the arc formulation grows out of control even for middle-sized instance, it is interesting to note that the number of constraints in the linear program stays similar for the arc formulation and for the path formulation. Only the flow conservation constraints are lost when switching paradigm.
+
+The two methods arrive almost always at the same cost. If there is a difference the arc formulation actually has the better solution. The difference could be explained by the way we relax our problem for the path formulation: we restrict our linear program to a set of paths that are optimal for the relaxed LP only. It is worth noting that this difference is always smaller than 2 time steps, so the flow formulation still finds very good solutions.
+
+We now compare our two methods in term of speeds. The speed is measured from the moment the solver receives and environment from flatland to the moment it can outputs the paths for all the trains. Figure \ref{fig:comparison} shows the improvement made by the second method: we accelerate the process in average by $96\%$ for sparse environments and by $98\%$ for complex environments.
+
+Figure \ref{fig:numberVar} explains the difference in speed gain: the sparse environment have less edges than the complex one, so the gain in reducing the number of variables is less. 
+
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=\linewidth]{img/comparison.png}
@@ -748,45 +777,77 @@ To solve the linear programs we use the commercial solver \cite{gurobi}. To obta
 	\label{fig:comparison}
 \end{figure}
 
-\todo[inline]{Explain the memory issues with the arc formulation}
+
 
 \subsection{Comparison with reinforcement learning approach}
-\todo[inline]{Mostly about the difference in terms of approach}
+
+At the same time this project was made, another one was studying the use of reinforcement learning to solve this competition. Here is a brief comparison of the two, but is far from complete and should be studied much further.
+
+We arrived at the conclusion that for the \emph{VRP}  the combinatorial approach was better in term of ease to implement and actual performance. On the other hand, considering the \emph{VRSP}, the reinforcement learning approach seems to have an edge compare to ours, due to its ability to modify trajectories \emph{on the fly}, without needing to recompute a plan for all the trains.
+
+There is of course the difference that the reinforcement learning algorithms need days to train while the combinatorial optimization methods need none. 
 
 
 \newpage
 \section{On the mixed RL-CO approach}
 
+In order to get the best of both worlds, here are our ideas on how to combine the combinatorial approach that was developed in this project with reinforcement learning.
+
+\todo[inline]{\blindtext}
+
+
+
+
+
+%\fancyhead[R]{\emph{CONCLUSION}}
+\section*{Conclusion}
+\label{sec:conclusion}
+\addcontentsline{toc}{section}{\nameref{sec:conclusion}}
+
+The \emph{vehicle routing problem (VRP)} was successfully  solved with combinatorial methods for most instances (even if for bigger instances improvements should be made). On the other hand, our formulation in term of flows failed to solve efficiently the \emph{vehicle re-scheduling problem (VRSP)} in this case.
+
+
+Examples of improvements include, but are not limited to, developing a better initial solution generator, improving the data structures to minimize the memory footprint, make the solver more robust to edge cases $\ldots$ 
+
+
+Other approaches such are double vertex graph (\cite{BachelorThesis}) and multiple agent path finding (MAPF) could also be considered.
+
+
 
 
 
 \newpage
+\fancyhead[R]{\emph{ANNEXES}}
+\section*{Annexes}
+\label{sec:annexes}
+\addcontentsline{toc}{section}{\nameref{sec:annexes}}
+\subsection*{Technical details about the implementation}
 
-\section{Conclusion}
-What can be improved
-\begin{itemize}
-	\item Initial solution generator (avoid infinite loop by randomizing order of priority)
-	\item merge unnecessary paths
-	\item better data structure 
-	\item more robust handling of environment (allow "spawning")
-\end{itemize}
-
-
-Other approaches such are double vertex graph (\cite{BachelorThesis}) and multiple agent path finding (MAPF) could be considered, but were not in this project.
-
-
-
-
-
-\newpage
-\section{Annexes}
-\subsection{More experiences}
-\subsection{Technical details about the implementation}
+Here are some details of the implementation that might seem strange, or some tricks we used to try to speed up the process.
 \todo[inline]{ we only have to sum over activated constraints.}
+\subsection*{Comparison in term of time}
+
+\begin{figure}[h]
+	\begin{minipage}{0.5\linewidth}
+		
+		
+		
+		\includegraphics[width=\linewidth]{img/time1.png}
+		\caption*{Arc formulation.}
+
+	\end{minipage}
+	\begin{minipage}{0.5\linewidth}
+		\includegraphics[width=\linewidth]{img/time2.png}
+		\caption*{Column generation method.}
+	\end{minipage}
+	\caption{time to solution for the two combinatorial methods used, in function of the size of the grid. Beware of the change in scale in the x-axis: the graph on the right goes up to a grid of $(100\times100)$ ! }
+
+\end{figure}
+
 
 
 \newpage
-
+\fancyhead[R]{\emph{REFERENCES}}
  \nocite{*} 
 
 
