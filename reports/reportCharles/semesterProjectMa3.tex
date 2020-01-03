@@ -158,8 +158,8 @@ Jonas Racine
 
 \end{titlepage}
 
-\thispagestyle{empty}
-\clearpage\null
+%\thispagestyle{empty}
+%\clearpage\null
 
 
 
@@ -179,8 +179,8 @@ Jonas Racine
 \newpage
 
 
-\thispagestyle{empty}
-\clearpage\null\newpage
+%\thispagestyle{empty}
+%\clearpage\null\newpage
 
 
 
@@ -348,7 +348,7 @@ We also have to add to the position constraints the waiting edges. Let's say we 
 
 
 
-\subsection{Dealing with different trains and stochastic events}
+\subsection{Dealing with different train speeds and stochastic events}
 
 For now, the trains were supposed to all have the same speed and there were supposed to be no changes in the underlying railway network over time. This is not realistic, so in order to have a better model, we discuss now what could be implemented to handle a system with multiple speeds and random breakdown of trains.
 
@@ -613,7 +613,7 @@ The other direction is similar.
 
 For each train, we will only use one path in the time expanded network, so even if the path formulation \eqref{eq:pathFormulationPrimal} leads to an exponential number of variables, actually only $K$ of them will be useful in the end. 
 
-With this remark in mind, the purpose of the column generation method is to gradually improve a feasible solution containing few variables until we have the optimal solution. The idea is that in a few iterations we should be able to find the optimal solution, leading us to consider a small number of variables compared to all the possible paths set.
+With this remark in mind, the purpose of the column generation method is to gradually improve a feasible solution containing few variables until we have the optimal solution. The idea is that in a few iterations we should be able to find the optimal solution, leading us to consider a small number of variables compared to all the possible paths set. See \cite{LectureNotes} for a more in depth explanation of the column generation method.
 \\
 
 We define the restricted linear program on a basis (set of variables) as the linear program \eqref{eq:pathFormulationPrimal} setting all variables at $0$ except for the variable contained in the basis.\\
@@ -627,7 +627,7 @@ We define the restricted linear program on a basis (set of variables) as the lin
 
 	\While{solution optimal}{
 	Solve restricted linear program on the basis\;
-	Solve pricing problem to find useful variables to add\;
+	Solve the pricing problem to find useful variables to add\;
 	Add these variables to the basis\;
 	}
 
@@ -645,12 +645,12 @@ We define the restricted linear program on a basis (set of variables) as the lin
 \paragraph{Pricing problem}
 \label{pricing}
 
-Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. Indeed for any basis use for the restricted linear program, the conditions \eqref{eq:cond1} and \eqref{eq:cond3} are automatically respected (can be seen by noticing that these conditions only depend on element in the basis of the LP). The only indication of the basis being not optimal is the second condition.
-\\
+Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. Indeed for any basis use for the restricted linear program, the conditions \eqref{eq:cond1} and \eqref{eq:cond3} are automatically respected. One can see this by explicitly deriving the dual variables from the restricted primal, and see that $c_P^{\sigma,w} = 0 ~\forall p$ in the basis $\mathcal{B}$ and $y_R = 0$  if $\nexists p \in \mathcal{B}$ st $\delta_P(R) = 1$ (the restriction is not used by the basis).\\
 
-If we find a path with a negative reduced cost, we can add it to the basis and improve our actual cost. We see now that the pricing problem can be efficiently solved.
-
-\subparagraph{Solving the pricing problem efficiently}
+ The only indication of the basis not being optimal is then the second condition \eqref{eq:cond2}.If we find a path with a negative reduced cost, we can add it to the basis and improve our actual cost. We see now that the pricing problem can be efficiently solved.
+ 
+\newpage
+\paragraph{Solving the pricing problem efficiently}
 Because of the particular nature of the restrictions in our problem, one can see that no restriction can span more than one time step in the time expanded network, and that a path cannot have two edges in the same time step (see section \ref*{restrictions}). 
 
 Based on these observations, we define the cost of an arc in the graph as:
@@ -675,6 +675,7 @@ So equation \eqref{eq:cond2} becomes:
 		\sum\limits_{(i,j) \in P} \left( w_{ij} + 1\right)  & \geq \sigma_k &\forall P \in P^k\\
 		\min_{P\in P^k}\sum\limits_{(i,j) \in P} \left( w_{ij} + 1\right)  & \geq \sigma_k & \\
 \end{eqnarray*}
+
 
 
 This shows that the pricing problem can efficiently be solved by searching for a weighted shortest paths $p^*_k$ between $s_k$ and $t_k$ for all commodities $k \in [K]$ . The weight for each arc $(i,j)\in A$ is given by $\tilde{w}_{ij} = w_{ij}+1$. We can use Dijkstra's algorithm to efficiently solve this problem since the weights of the edges are positive.
@@ -824,7 +825,12 @@ Other approaches such are double vertex graph (\cite{BachelorThesis}) and multip
 \subsection*{Technical details about the implementation}
 
 Here are some details of the implementation that might seem strange, or some tricks we used to try to speed up the process.
-\todo[inline]{ we only have to sum over activated constraints.}
+\subparagraph{Computing weights in pricing problem}
+\begin{equation*}
+w_{ij} = -\sum_{R \in C_R} \delta_R((i,j))\cdot y_R \geq 0
+\end{equation*}
+
+It is easier to go through the activated restrictions (i.e. restrictions through which a path of the basis is going) and add its weights on the edges belonging to this restriction. Indeed a non activated constraints will have $y_R = 0$.
 \subsection*{Comparison in term of time}
 
 \begin{figure}[h]
