@@ -179,7 +179,7 @@ Jonas Racine
 
 
 \begin{abstract}
-	We tackle the \emph{vehicle routing problem (VRP)} and \emph{vehicle re-scheduling problem (VRSP)} through an online competition using \emph{dynamic multicommodity flows}.
+	We tackle the \emph{vehicle routing problem (VRP)} through an online competition using \emph{dynamic multicommodity flows} with \cite{gurobi} and Python.
 \end{abstract}
 
 \tableofcontents
@@ -272,35 +272,37 @@ Specific constraints arise in this environment:
 	\label{blocked}
 \end{figure}
 
-As the competition went on, additional complexities were added to the environment. The trains now having different possible speeds as well as stochastic breakdown events. More specifically, each train had an attribute \textit{speed ratio}, which specified how many time steps it needed to advance to the next cell. For example, an agent with a speed ratio of $\frac{1}{3}$ would need three time steps move to the next cell. Additionally, agent were also subject to stochastic $breakdowns$ following a Poisson process. During a breakdown, an agent would remain immobile for a variable amount of time steps thus blocking its current cell.
+As the competition went on, additional complexities were added to the environment. The trains now have different possible speeds and there are stochastic breakdown events. More specifically, each train had an attribute \textit{speed ratio}, which specified how many time steps it needed to advance to the next cell. For example, an agent with a speed ratio of $\frac{1}{3}$ would need three time steps to move to the next cell. Additionally, agents were also subject to stochastic $breakdowns$ following a Poisson process. During a breakdown, an agent would remain immobile for a variable amount of time steps thus blocking its current cell.
 
 
 
 
 \newpage
+
+\newpage
 \section{Modelization of the environment}
 
-To have a formulation of our problem in term of dynamic multicommodity flows (\emph{multicommodity flows over time}), we need to first define the graph representing the railway network from the 2D grid world. Then we need to embed the time component in our model using a time expanded network, bringing our problem back to a static multicommodity flow problem.
+To have a formulation of our problem in terms of dynamic multicommodity flows (\emph{multicommodity flows over time}), we need to first define the graph representing the railway network from the 2D grid world. Then we need to embed the time component in our model using a time expanded network, bringing our problem back to a static multicommodity flow problem.
 We first model the problem with a unique speed for all trains.
 
 \subsection{Transition network}
 
-We create a graph to model all the possible switches and rails in the rail network from Flatland. In order to do so, we model each cell as a super node containing 8 internal nodes, as can be seen in Figure \ref{fig:simple_super_node}. These internal nodes are responsible for correctly implementing the different transitions the original cell allows. 
+We create a graph to model all the possible switches and rails in the rail network from Flatland. To do so, we model each cell as a supernode containing 8 internal nodes, as can be seen in Figure \ref{fig:simple_super_node}. These internal nodes are responsible for correctly implementing the different transitions the original cell allows. 
 
 
 \begin{figure}[h]
 	\begin{minipage}{0.5\linewidth}
-	\centering
-	\includegraphics[width=0.9\linewidth]{img/super_node.jpg}
-	\caption{Super node representing the cell represented in Figure \ref{fig:cell super node example}. The blue rectangles represent the internal nodes of the cell, where the big white rectangle represents the super node.}
-	\label{fig:simple_super_node}
+		\centering
+		\includegraphics[width=0.9\linewidth]{img/super_node.jpg}
+		\caption{Super node representing the cell represented in Figure \ref{fig:cell super node example}. The blue rectangles represent the internal nodes of the cell, where the big white rectangle represents the super node.}
+		\label{fig:simple_super_node}
 	\end{minipage}
 	\begin{minipage}{0.5\linewidth}
-	\centering
-	\includegraphics[width=0.5\linewidth]{img/switch.png}
-	\caption{A switch from the railway network.}
-	\vspace{1.6cm}
-	\label{fig:cell super node example}
+		\centering
+		\includegraphics[width=0.5\linewidth]{img/switch.png}
+		\caption{A switch from the railway network.}
+		\vspace{1.6cm}
+		\label{fig:cell super node example}
 	\end{minipage}
 \end{figure}
 
@@ -324,10 +326,10 @@ The transition network is an oriented graph $G = (V,A)$ that represents the orig
 \end{figure}
 
 
-Why did we not use a single node to represent each cell and connect it to its neighbors if there is a connection between them? The problem with the simple node modelization is that it allows transition that are not represented in the original railway network. Take for example the switch in Figure \ref{fig:cell super node example}: with a simple node representation, a train coming from a cell below could go to the left whereas in the original cell it should not be possible.
+Why did we not use a single node to represent each cell and connect it to its neighbors if there is a connection between them? The problem with the simple node modelization is that it allows transitions that are not represented in the original railway network. Take for example the switch in Figure \ref{fig:cell super node example}: with a simple node representation, a train coming from a cell below could go to the left whereas in the original cell it should not be possible.
 \newline
 
-There exists alternatives to model railway networks, namely the double vertex graphs (see for example the modelization done in  \cite{BachelorThesis}). Those were not considered here since they are not simple directed graphs. Indeed they have a particular definition of paths, so the usual flows algorithm would not be straightforward to apply.
+There exist alternatives to model railway networks, namely the double vertex graphs (see for example the modelization done in  \cite{BachelorThesis}). Those were not considered here since they are not simply directed graphs. Indeed they have a particular definition of paths, so the usual flows algorithm would not be straightforward to apply.
 
 
 
@@ -338,7 +340,7 @@ There exists alternatives to model railway networks, namely the double vertex gr
 
 We now have to include the time component in our design. We will use a time expanded network to bring back our dynamic multicommodity flow problem to a static formulation. 
 
-Intuitively we define a discrete time step (given by the environment in our case) and a maximum time horizon $T$. Now we do $T$ copies of the nodes of our graph, and only allow transition from one time step to another. Figure \ref{fig:ten intuition} shows the intuition by drawing a path in a time expanded network.
+Intuitively we define a discrete timestep (given by the environment in our case) and a maximum time horizon $T$. Now we do $T$ copies of the nodes of our graph, and only allow transition from one timestep to another. Figure \ref{fig:ten intuition} shows the intuition by drawing a path in a time expanded network.
 
 
 \begin{figure}[h]
@@ -351,7 +353,7 @@ Intuitively we define a discrete time step (given by the environment in our case
 
 We now give a formal definition from \cite[p.~19]{Skutella2008AnIT}:
 \begin{madef}[Time-expanded network]
-	 Let $G = (V, E)$ be a network with capacities $u$ and costs $c$ on the arcs. For a given time horizon $T\in \mathds{Z}_{>0}$ ,	the corresponding \emph{time-expanded network} $G^T = (V^T, E^T)$ with capacities and costs on the arcs
+	Let $G = (V, E)$ be a network with capacities $u$ and costs $c$ on the arcs. For a given time horizon $T\in \mathds{Z}_{>0}$ ,    the corresponding \emph{time-expanded network} $G^T = (V^T, E^T)$ with capacities and costs on the arcs
 	is defined as follows. For each node $v\in V$ we create $T$ copies $v_0 , v_1 , \ldots, v_{T-1} $, that is,
 	$$V^T := \{v_\theta | v \in V, \theta = 0, 1, \ldots, T-1\}.$$
 	For each arc $e = (v, w) \in E$, there are $T-1$  copies $e_0,e_1,\ldots,e_{T-2}$ where arc $e_\theta$ connects
@@ -359,20 +361,20 @@ We now give a formal definition from \cite[p.~19]{Skutella2008AnIT}:
 	\emph{waiting} arcs $(v_\theta , v _{\theta+1})$ for $v \in V$ and $\theta = 0,\ldots, T-2$. The capacity of waiting arcs is $1$
 	and they have cost $1$. Summarizing, the set of arcs $E^T$ is given by
 	\begin{align*}
-	 E^T := &\{e_\theta = (v_\theta,w_{\theta+1})| e = (u,v) \in E, \theta=0,1,\ldots,T-2 \} \\
-	 &\cup \{(v_\theta,v_{\theta+1})|v\in V, \theta=0,1,\ldots,T-2 \}
-	 \end{align*}
+	E^T := &\{e_\theta = (v_\theta,w_{\theta+1})| e = (u,v) \in E, \theta=0,1,\ldots,T-2 \} \\
+	&\cup \{(v_\theta,v_{\theta+1})|v\in V, \theta=0,1,\ldots,T-2 \}
+	\end{align*}
 \end{madef}
 
-Notice that the size of the	time-expanded network $G^T$ is linear in $T$ and therefore only pseudo-polynomial in the input size.
+Notice that the size of the time-expanded network $G^T$ is linear in $T$ and therefore only pseudo-polynomial in the input size.
 
 
 
 
-We then proceed to define a time step, which represent what would be added to a time expanded graph, were we to expand the horizon by one.
+We then proceed to define a timestep, which represents what would be added to a time expanded graph, were we to expand the horizon by one.
 
-\begin{madef}[Time step in time expanded network]	
-	A \emph{time step} at time $\theta$ is the set of all edges $(v_\theta,w)$ for all $v \in V$, $w \in V^T$ such that $(v_\theta,w) \in E^T$. 
+\begin{madef}[Timestep in time expanded network]    
+	A \emph{timestep} at time $\theta$ is the set of all edges $(v_\theta,w)$ for all $v \in V$, $w \in V^T$ such that $(v_\theta,w) \in E^T$. 
 	It represents the set of all edges starting at time $\theta$.
 \end{madef}
 
@@ -380,10 +382,10 @@ We then proceed to define a time step, which represent what would be added to a 
 \begin{remark}
 	There are no cycles in the time expanded network since $\nexists (v_\theta,w_{\tilde{\theta}}) \in E^T$ with $\tilde{\theta} < \theta$.
 \end{remark}
-	
+
 \subsection{Restrictions}
 \label{sec:restrictions}
-In the environment from Flatland some position are forbidden: two trains cannot be at the same cell at the same time, and to trains can collide, meaning they cannot swap positions.  We will first define the restrictions needed on the transition network and then explain how to impose the same restriction on the time expansion of this network.
+In the environment from Flatland, some positions are forbidden: two trains cannot be at the same cell at the same time, and trains can collide, meaning they cannot swap positions.  We will first define the restrictions needed on the transition network and then explain how to impose the same restriction on the time expansion of this network.
 
 A restriction will impose that among a certain set of edges, only one of them can be used at the same time.
 
@@ -393,9 +395,9 @@ A restriction will impose that among a certain set of edges, only one of them ca
 
 \begin{itemize}
 	\item Position constraint\\
-	All the edges leading to specific supernode should be \emph{restricted}. Using these restrictions, we ensure that at any time step, at most one train will be in any cell, thus avoiding collisions.
+	All the edges leading to specific supernode should be \emph{restricted}. Using these restrictions, we ensure that at any timestep, at most one train will be in any cell, thus avoiding collisions.
 	\item Swapping constraint
-	All pairs of edges between two supernodes shouls be \emph{restricted}. It is trivial to see that these restrictions will be enough to prevent swapping.
+	All pairs of edges between two supernodes should be \emph{restricted}. It is trivial to see that these restrictions will be enough to prevent swapping.
 \end{itemize}
 
 
@@ -414,26 +416,26 @@ The restrictions on the time expanded network can be easily derived from the res
 We also have to add to the position constraints the waiting edges. Let's say we consider a cell $i$ with its corresponding supernode, all the waiting edges of this supernode should be added to the position constraint linked to cell $i$.
 
 \begin{remark}
-	Due to the nature of the restrictions, a path in the time expanded network can only take one edge per restriction. Indeed, otherwise it would mean that at a certain time $t$, the path takes two edges in the transition network at the same time which is impossible.
+	Due to the nature of the restrictions, a path in the time expanded network can only take one edge per restriction. Otherwise, it would mean that at a certain time $t$, the path takes two edges in the transition network at the same time which is impossible.
 \end{remark}
 
 
 
 \subsection{Dealing with different train speeds and stochastic events}
 
-For now, the trains were supposed to all have the same speed and there were supposed to be no changes in the underlying railway network over time. This is not realistic, so in order to have a better model, we discuss now what could be implemented to handle a system with multiple speeds and random breakdown of trains.
+For now, the trains were supposed to all have the same speed and there were supposed to be no changes in the underlying railway network over time. This is not realistic, so to have a better model, we discuss now what could be implemented to handle a system with multiple speeds and random breakdown of trains.
 
 
 \subsubsection{Different speeds}
 
-In the Flatland challenge, trains can have different speeds. The speeds will be defined as follow. The faster trains will have a speed of $1$, meaning that it takes them one time step to go between two nodes in the transition graph. Then all the other train will have a speed $v \in [0,1]$ with $v$ representing the percentage of the edge that is traveled by said train in one time step. For example, if a train a speed $1/3$, it will take 3 time steps to travel through an edge.
+In the Flatland challenge, trains can have different speeds. The speeds will be defined as follow. The faster trains will have a speed of $1$, meaning that it takes them one timestep to go between two nodes in the transition graph. Then all the other trains will have a speed $v \in [0,1]$ with $v$ representing the percentage of the edge that is traveled by said train in one timestep. For example, if a train has a  speed of  $1/3$, it will take 3 timesteps to travel through an edge.
 
 Now suppose we have only two different speeds (the discussion easily generalize to $k$ different speeds), namely $1$ and $v$ (w.l.o.g. we say that one of the two speeds is $1$ otherwise we would just rescale all of them).
 
-We can then build two time expanded networks, one for each speed. The tricky parts are the restrictions: they now span the two networks. Indeed, now one train takes $v^-1$ time steps to go through an edge, while the other takes only one time step, so it is necessary to have the constraints spanning the 2 networks.
+We can then build two time expanded networks, one for each speed. The tricky parts are the restrictions: they now span the two networks. Indeed, now one train takes $v^-1$ timesteps to go through an edge, while the other takes only one timestep, so it is necessary to have the constraints spanning the 2 networks.
 
 
-The way to do it is to have the fastest train's network as a point of reference. This one has the usual constraints, to which we had edges from the other graph. Take a constraint, and look at the edges contained in it. You then take the corresponding edges (representing the same railway piece), and add them for the corresponding time steps.
+The way to do it is to have the fastest train's network as a point of reference. This one has the usual constraints, to which we had edges from the other graph. Take a constraint, and look at the edges contained in it. You then take the corresponding edges (representing the same railway piece) and add them for the corresponding timesteps.
 
 \begin{figure}[h]
 	\centering
@@ -451,27 +453,27 @@ A formal way to say this would be that for any edge $(u_{t1},v_{t2})'$ in the sl
 \newline
 
 
-One could argue about building only one network combining the edges of our two networks. The reason we build two different network is for efficiency when finding minimum weighted path during the column generation pricing problem (see subsection \ref{pricing}).
+One could argue about building only one network combining the edges of our two networks. The reason we build two different networks is for efficiency when finding minimum weighted paths during the column generation pricing problem (see subsection \ref{pricing}).
 
 \subsubsection{Stochastic events}
 
 
 
-In the case of failure in the network, there will be  unusable tracks (cells) for a certain period of time (known or unknown depending on the setting). In this case one can still use our method.
-When a failure happens, suppose $k$ trains break down among the $n$ in the network. The cells occupied by the broken trains will be unusable for a certain period of time $T$. We now propose multiple approaches.
+In the case of failure in the network, there will be unusable tracks (cells) for a certain time (known or unknown depending on the setting). In this case, one can still use our method.
+When a failure happens, suppose $k$ trains break down among the $n$ in the network. The cells occupied by the broken trains will be unusable for a certain time $T$. We now propose multiple approaches.
 \begin{itemize}
-
-
-
-		\item Restart from scratch all the trains, taking as initial position their position at failure time. When the trains are reactivated (failure is resolved) solve once more to move all the trains to their destination.
-		\item Reroute only the trains affected by the failure in a modified time expanded network
-
+	
+	
+	
+	\item Restart from scratch all the trains, taking as initial position their position at failure time. When the trains are reactivated (failure is resolved) solve once more to move all the trains to their destination.
+	\item Reroute only the trains affected by the failure in a modified time expanded network
+	
 \end{itemize}
 
 
 
 
-The following sections considers one unique speed for all the trains and no stochastic events. This can easily be adapted  following the above discussion.
+The following sections consider one unique speed for all the trains and no stochastic events. This can easily be adapted following the above discussion.
 \newpage
 \section{Minimum cost multicommodity flow}
 
@@ -480,7 +482,7 @@ We now consider the time expanded network defined in section \ref*{ten} and deno
 We now formalize the definition of restriction as described in section \ref*{sec:restrictions}.
 
 \begin{madef}
-	A restriction $R$ over a time expanded network $G = (V,A)$ is a set of arcs: $R \subset A$ over which we want to impose certains specification (e.g. global capacity).
+	A restriction $R$ over a time expanded network $G = (V,A)$ is a set of arcs: $R \subset A$ over which we want to impose certain specifications (e.g. global capacity).
 	
 	We define $C_R$ the set of all restrictions over the time expanded network $G$.
 \end{madef}
@@ -493,13 +495,13 @@ We also introduce a notation:
 	\[
 	\delta_\alpha(\beta)=\left\{
 	\begin{array}{ll}
-	 \mathds{1}{\{\beta \cap \alpha \neq \emptyset\}} \text{ if } \beta \text{ is a set}\\
+	\mathds{1}{\{\beta \cap \alpha \neq \emptyset\}} \text{ if } \beta \text{ is a set}\\
 	\mathds{1}{\{\beta \in \alpha\}} \text{ otherwise}\\
 	\end{array}
 	\right.
 	\]
 	Informally this represents the fact that $\alpha$ and $\beta$ are not disjoint or that $\beta$ is contained in $\alpha$.
-
+	
 \end{madef}
 
 
@@ -531,7 +533,7 @@ b^k_i=\left\{
 
 
 
-This formulation is clear and intuitive: for each commodity we decide whether or not it will use a specific arc at a certain time by setting $x_{ij}^k$ to $1$ or to $0$. But this formulation \eqref{eq:arcFlow} is not scalable due to its high number of restrictions and variables (see section \ref{results:arcsVSflow} for a more detailed explanation). We then proceed to find new ways to solve this problem.
+This formulation is clear and intuitive: for each commodity, we decide whether or not it will use a specific arc at a certain time by setting $x_{ij}^k$ to $1$ or to $0$. But this formulation \eqref{eq:arcFlow} is not scalable due to its high number of restrictions and variables (see section \ref{results:arcsVSflow} for a more detailed explanation). We then proceed to find new ways to solve this problem.
 
 
 
@@ -543,7 +545,7 @@ This formulation is clear and intuitive: for each commodity we decide whether or
 
 \subsection{Column generation method}
 
-In this section, we give a column generation solution procedure that works with arbitrary restrictions, as long as the restrictions do not span more than one time step (see section \ref*{sec:restrictions} for an explanation). We directly consider the relaxation problem.
+In this section, we give a column generation solution procedure that works with arbitrary restrictions, as long as the restrictions do not span more than one timestep (see section \ref*{sec:restrictions} for an explanation). We directly consider a relaxation problem.
 
 \subsubsection{Reformulation as a path flow problem}
 
@@ -551,14 +553,14 @@ In this section, we give a column generation solution procedure that works with 
 For this section we will restate our problem using path flows instead of arc flows as before. In this paradigm, we suppose that we list all the possible paths between the sources and targets, $\mathcal{P}$. Then for each path $P \in \mathcal{P}$ we decide how much we send along this path with the variable $f(P)$.
 
 
- The problem then becomes: 
+The problem then becomes: 
 \begin{equation}
-	\begin{array}{ll@{}ll}
-		\text{minimize}  & \displaystyle\sum\limits_{P \in \mathcal{P}} &f(P)|P| &\\
-		\text{subject to}& \displaystyle\sum\limits_{P \in \mathcal{P}_R}   &f(P) \leq 1,  &\forall R \in C_R\\
-	& \displaystyle\sum\limits_{P \in P^k}   &f(P) = 1,  &\forall k \in \{1,\ldots,K\}\\
-		&                                                &f(P) \geq 0, &P\in \mathcal{P}
-	\end{array}
+\begin{array}{ll@{}ll}
+\text{minimize}  & \displaystyle\sum\limits_{P \in \mathcal{P}} &f(P)|P| &\\
+\text{subject to}& \displaystyle\sum\limits_{P \in \mathcal{P}_R}   &f(P) \leq 1,  &\forall R \in C_R\\
+& \displaystyle\sum\limits_{P \in P^k}   &f(P) = 1,  &\forall k \in \{1,\ldots,K\}\\
+&                                                &f(P) \geq 0, &P\in \mathcal{P}
+\end{array}
 \label{eq:pathFormulationPrimal}
 \end{equation}
 
@@ -577,8 +579,8 @@ The dual of the primal formulation (\ref{eq:pathFormulationPrimal}) is:
 \begin{array}{ll@{}lll}
 \text{maximize}  &\displaystyle\sum\limits_{R \in C_R} &y_R  +\displaystyle\sum\limits_{i=1}^{K}\sigma_i &\\
 \text{subject to}  & \displaystyle\sum\limits_{R \in C_R}   &\delta_P(R)\cdot y_R + \sigma_k \leq |P|,  &\forall P \in \mathcal{P}\\
- &                                               &y \leq 0, &y \in \mathbb{R}^{|C_R|} \\
- &												 & &\sigma \in \mathbb{R}^K\\
+&                                               &y \leq 0, &y \in \mathbb{R}^{|C_R|} \\
+&                                                 & &\sigma \in \mathbb{R}^K\\
 \end{array}
 \label{eq:pathFormulationDual}
 \end{equation}
@@ -588,7 +590,7 @@ The dual of the primal formulation (\ref{eq:pathFormulationPrimal}) is:
 
 With respect of the dual variables,the reduced cost $c_P^{\sigma,y}$ for each path flow variable $f(P)$ which belongs to commodity $k$ is :
 \begin{equation}
- c_P^{\sigma,y} = |P| - \sum\limits_{R \in C_R}   \delta_P(R)\cdot y_R -\sigma_k
+c_P^{\sigma,y} = |P| - \sum\limits_{R \in C_R}   \delta_P(R)\cdot y_R -\sigma_k
 \label{eq:reducedCost}
 \end{equation}
 
@@ -607,83 +609,83 @@ We can then derive complementary slackness conditions.
 
 
 \begin{proof}[Proof of theorem \ref{theorem:slackcond}]$ $\\
-	 We show that optimality of the primal \eqref{eq:pathFormulationPrimal} implies the complementarity slackness conditions from theorem \ref{theorem:slackcond}. 
-	 
-	 Denote $f^*(\mathcal{P}),y^*_{S}$ and $\sigma^*_k$ the optimal solution from \eqref{eq:pathFormulationPrimal} and \eqref{eq:pathFormulationDual}. Since $y^*$ and $\sigma^*$ are solution of the dual formulation we get condition \eqref{eq:cond2} directly.
-	 
-	 To show the other two conditions, we will write the primal and dual expression in matrix form.
-	 
-	 \paragraph{Primal}
-	 \begin{equation*}
-	 	\begin{array}{ll@{}ll}
-	 \text{minimize}  &b^T f(\mathcal{P})  \\
-	 \\
-	 \text{subject to} 
-	 &\left( \begin{matrix} -A_{C_R}	\\ A_K \\ -A_K \\ \end{matrix} \right) \cdot f(\mathcal{P}) \geq  \left( \begin{matrix} -1_{|C_R|}	\\ 1_K \\ -1_K \\ \end{matrix} \right) \\
-	 \\
-	                                          &f(\mathcal{P}) \geq 0
-	 \end{array}
-	 \label{eq:matrixformprimal}
-	 \end{equation*}
-	 
-	 With: 
-	 \begin{itemize}
-	 	\item $b \in \mathbb{R}^{|\mathcal{P}|}, \quad b_P = |P|$ is the vector containing the length of the paths.
-	 	\item $A_{C_R} \in \mathbb{R}^{|C_R|\times |\mathcal{P}|}$ where $\left(A_{C_R}\right)_{ij}$ is $1$ if the $i^{th}$ restriction contains an edge that belongs to the $j^{th}$ path and $0$ else.
-	 	\item $A_K \in \mathbb{R}^{K\times |\mathcal{P}|}$ where $\left(A_K\right)_{ij}$ is $1$ if the $j^{th}$ path belongs to $\mathcal{P}_i$ (i.e. belongs to the $i^{th}$ commodity) and $0$ else.
-	 \end{itemize}
- 
- 
-
- 
- \paragraph{Dual}
- \begin{equation*}
- \begin{array}{ll@{}ll}
- \text{maximize}  &\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y}   \\
- \\
- \text{subject to} 
- &\left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right) \cdot \tilde{y} \leq  b  \\
- \\
- &\tilde{y} \geq 0
- \end{array}
- \label{eq:matrixformdual}
- \end{equation*}
- 
- Where $\tilde{y} =\left( \begin{matrix} -y \\ \tilde{\sigma_1} \\ \tilde{\sigma_2}  \end{matrix} \right) $ with $y \in \mathbb{R}^{|C_R|}$  and $\tilde{\sigma_1} + \tilde{\sigma_2} = \sigma \in \mathbb{R}^{K}$, with $y,\sigma$ being as \eqref{eq:pathFormulationDual}.
-
- 
- Then we rewrite the conditions \eqref{eq:cond1} and \eqref{eq:cond3} in matrix form:
-\begin{align*}
-&\left[ \left( \left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right) - f(\mathcal{P})^T\left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right) \right) \cdot \tilde{y}\right]_{i}= 0 & \text{ for all } i \in \{0,1\ldots,|C_R| \}\\
-& f(\mathcal{P})^T\left( b - \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \right) = 0 &
-\end{align*}
- 
- 
- By the weak duality theorem we have: 
- $$\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} \leq  
- f(\mathcal{P})^T \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \leq f(\mathcal{P})^Tb $$
- 
- Using the strong duality theorem, we also have 
- $$\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} =  f(\mathcal{P})^Tb  $$
-
-Combining the two results from strong an weak duality we get the following two equalities:
-\begin{align*}
-\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} = 
-f(\mathcal{P})^T \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \\
-f(\mathcal{P})^T \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} =  f(\mathcal{P})^Tb 
-\end{align*}
-
-Which is exactly what we aimed to obtain.
-The other direction is similar.
-
-	 
-	 
+	We show that optimality of the primal \eqref{eq:pathFormulationPrimal} implies the complementarity slackness conditions from theorem \ref{theorem:slackcond}. 
+	
+	Denote $f^*(\mathcal{P}),y^*_{S}$ and $\sigma^*_k$ the optimal solution from \eqref{eq:pathFormulationPrimal} and \eqref{eq:pathFormulationDual}. Since $y^*$ and $\sigma^*$ are solution of the dual formulation we get condition \eqref{eq:cond2} directly.
+	
+	To show the other two conditions, we will write the primal and dual expression in matrix form.
+	
+	\paragraph{Primal}
+	\begin{equation*}
+	\begin{array}{ll@{}ll}
+	\text{minimize}  &b^T f(\mathcal{P})  \\
+	\\
+	\text{subject to} 
+	&\left( \begin{matrix} -A_{C_R}    \\ A_K \\ -A_K \\ \end{matrix} \right) \cdot f(\mathcal{P}) \geq  \left( \begin{matrix} -1_{|C_R|}    \\ 1_K \\ -1_K \\ \end{matrix} \right) \\
+	\\
+	&f(\mathcal{P}) \geq 0
+	\end{array}
+	\label{eq:matrixformprimal}
+	\end{equation*}
+	
+	With: 
+	\begin{itemize}
+		\item $b \in \mathbb{R}^{|\mathcal{P}|}, \quad b_P = |P|$ is the vector containing the length of the paths.
+		\item $A_{C_R} \in \mathbb{R}^{|C_R|\times |\mathcal{P}|}$ where $\left(A_{C_R}\right)_{ij}$ is $1$ if the $i^{th}$ restriction contains an edge that belongs to the $j^{th}$ path and $0$ else.
+		\item $A_K \in \mathbb{R}^{K\times |\mathcal{P}|}$ where $\left(A_K\right)_{ij}$ is $1$ if the $j^{th}$ path belongs to $\mathcal{P}_i$ (i.e. belongs to the $i^{th}$ commodity) and $0$ else.
+	\end{itemize}
+	
+	
+	
+	
+	\paragraph{Dual}
+	\begin{equation*}
+	\begin{array}{ll@{}ll}
+	\text{maximize}  &\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y}   \\
+	\\
+	\text{subject to} 
+	&\left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right) \cdot \tilde{y} \leq  b  \\
+	\\
+	&\tilde{y} \geq 0
+	\end{array}
+	\label{eq:matrixformdual}
+	\end{equation*}
+	
+	Where $\tilde{y} =\left( \begin{matrix} -y \\ \tilde{\sigma_1} \\ \tilde{\sigma_2}  \end{matrix} \right) $ with $y \in \mathbb{R}^{|C_R|}$  and $\tilde{\sigma_1} + \tilde{\sigma_2} = \sigma \in \mathbb{R}^{K}$, with $y,\sigma$ being as \eqref{eq:pathFormulationDual}.
+	
+	
+	Then we rewrite the conditions \eqref{eq:cond1} and \eqref{eq:cond3} in matrix form:
+	\begin{align*}
+	&\left[ \left( \left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right) - f(\mathcal{P})^T\left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right) \right) \cdot \tilde{y}\right]_{i}= 0 & \text{ for all } i \in \{0,1\ldots,|C_R| \}\\
+	& f(\mathcal{P})^T\left( b - \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \right) = 0 &
+	\end{align*}
+	
+	
+	By the weak duality theorem we have: 
+	$$\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} \leq  
+	f(\mathcal{P})^T \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \leq f(\mathcal{P})^Tb $$
+	
+	Using the strong duality theorem, we also have 
+	$$\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} =  f(\mathcal{P})^Tb  $$
+	
+	Combining the two results from strong an weak duality we get the following two equalities:
+	\begin{align*}
+	\left( \begin{matrix} -1_{|C_R|}^T, 1_K^T, -1_K^T  \end{matrix} \right)\cdot \tilde{y} = 
+	f(\mathcal{P})^T \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} \\
+	f(\mathcal{P})^T \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \right)\tilde{y} =  f(\mathcal{P})^Tb 
+	\end{align*}
+	
+	Which is exactly what we aimed to obtain.
+	The other direction is similar.
+	
+	
+	
 \end{proof}
 \subsubsection{Column generation method}
 
 For each train, we will only use one path in the time expanded network, so even if the path formulation \eqref{eq:pathFormulationPrimal} leads to an exponential number of variables, actually only $K$ of them will be useful in the end. 
 
-With this remark in mind, the purpose of the column generation method is to gradually improve a feasible solution containing few variables until we have the optimal solution. The idea is that in a few iterations we should be able to find the optimal solution, leading us to consider a small number of variables compared to all the possible paths set. See \cite{LectureNotes} for a more in depth explanation of the column generation method.
+With this remark in mind, the purpose of the column generation method is to gradually improve a feasible solution containing few variables until we have the optimal solution. The idea is that in a few iterations we should be able to find the optimal solution, leading us to consider a small number of variables compared to all the possible paths set. See \cite{LectureNotes} for a more in-depth explanation of the column generation method.
 \\
 
 We define the restricted linear program on a basis (set of variables) as the linear program \eqref{eq:pathFormulationPrimal} setting all variables at $0$ except for the variable contained in the basis.\\
@@ -694,14 +696,14 @@ We define the restricted linear program on a basis (set of variables) as the lin
 	\SetAlgoLined
 	\KwResult{Optimal solution to \eqref{eq:pathFormulationPrimal}}
 	\KwIn{Basis: initial feasible solution}
-
+	
 	\While{solution optimal}{
-	Solve restricted linear program on the basis\;
-	Solve the pricing problem to find useful variables to add\;
-	Add these variables to the basis\;
+		Solve restricted linear program on the basis\;
+		Solve the pricing problem to find useful variables to add\;
+		Add these variables to the basis\;
 	}
-
-	Return solution of restricted linear program on the basis\;
+	
+	Return solution of the restricted linear program on the basis\;
 	
 	
 	\caption{Column generation algorithm}
@@ -717,11 +719,11 @@ We define the restricted linear program on a basis (set of variables) as the lin
 
 Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. Indeed for any basis use for the restricted linear program, the conditions \eqref{eq:cond1} and \eqref{eq:cond3} are automatically respected. One can see this by explicitly deriving the dual variables from the restricted primal, and see that $c_P^{\sigma,w} = 0 ~\forall p$ in the basis $\mathcal{B}$ and $y_R = 0$  if $\nexists p \in \mathcal{B}$ st $\delta_P(R) = 1$ (the restriction is not used by the basis).\\
 
- The only indication of the basis not being optimal is then the second condition \eqref{eq:cond2}.If we find a path with a negative reduced cost, we can add it to the basis and improve our actual cost. We see now that the pricing problem can be efficiently solved.
- 
+The only indication of the basis not being optimal is then the second condition \eqref{eq:cond2}. If we find a path with a negative reduced cost, we can add it to the basis and improve our actual cost. We see now that the pricing problem can be efficiently solved.
+
 \newpage
 \paragraph{Solving the pricing problem efficiently}
-Because of the particular nature of the restrictions in our problem, one can see that no restriction can span more than one time step in the time expanded network, and that a path cannot have two edges in the same time step (see section \ref*{restrictions}). 
+Because of the particular nature of the restrictions in our problem, one can see that no restriction can span more than one timestep in the time expanded network and that a path cannot have two edges in the same timestep (see section \ref*{restrictions}). 
 
 Based on these observations, we define the cost of an arc in the graph as:
 \begin{equation*}
@@ -739,11 +741,11 @@ $$ c_P^{\sigma,y} = |P| + \sum\limits_{(i,j) \in P}  w_{ij} -\sigma_k $$
 So equation \eqref{eq:cond2} becomes:
 
 \begin{eqnarray*}
-		c_P^{\sigma,y} & \geq 0 &\forall P \in P^k\\
-		|P| + \sum\limits_{(i,j) \in P}  w_{ij} -\sigma_k & \geq 0 &\forall P \in P^k\\
-		|P| + \sum\limits_{(i,j) \in P}  w_{ij}  & \geq \sigma_k &\forall P \in P^k\\
-		\sum\limits_{(i,j) \in P} \left( w_{ij} + 1\right)  & \geq \sigma_k &\forall P \in P^k\\
-		\min_{P\in P^k}\sum\limits_{(i,j) \in P} \left( w_{ij} + 1\right)  & \geq \sigma_k & \\
+	c_P^{\sigma,y} & \geq 0 &\forall P \in P^k\\
+	|P| + \sum\limits_{(i,j) \in P}  w_{ij} -\sigma_k & \geq 0 &\forall P \in P^k\\
+	|P| + \sum\limits_{(i,j) \in P}  w_{ij}  & \geq \sigma_k &\forall P \in P^k\\
+	\sum\limits_{(i,j) \in P} \left( w_{ij} + 1\right)  & \geq \sigma_k &\forall P \in P^k\\
+	\min_{P\in P^k}\sum\limits_{(i,j) \in P} \left( w_{ij} + 1\right)  & \geq \sigma_k & \\
 \end{eqnarray*}
 
 
@@ -785,7 +787,7 @@ Where we say that a path $p^*$ does not have conflicts with a set of paths $P$ i
 
 After having a set of optimal paths for the fractional formulation of \eqref{eq:pathFormulationPrimal} we have to get an integral solution.
 
-For now this is done by \cite{gurobi} automatically, using branch-price-and-cut algorithms when asked to solve the restricted master problem \eqref{eq:pathFormulationPrimal} with integer variables. A good overview of the methods can be found in \cite{BranchAndCut}, even if it might be outdated by modern software.
+For now, this is done by \cite{gurobi} automatically, using branch-price-and-cut algorithms when asked to solve the restricted master problem \eqref{eq:pathFormulationPrimal} with integer variables. A good overview of the methods can be found in \cite{BranchAndCut}, even if it might be outdated by modern software.
 
 
 
@@ -797,7 +799,7 @@ For now this is done by \cite{gurobi} automatically, using branch-price-and-cut 
 To solve the linear programs we use the commercial solver \cite{gurobi}. To obtain the integral solution we use their optimized algorithms which might differ from what is described in section \ref{relaxation}. The rest of the implementation is in Python and can be found at \cite{GIT}.
 
 
-All experiments are done with constant speeds for all the train and no stochastic events.
+All experiments are done with constant speeds for all the trains and no stochastic events.
 
 \label{results}
 \subsection{Experimental results}
@@ -805,9 +807,9 @@ All experiments are done with constant speeds for all the train and no stochasti
 
 \subsubsection{Arc formulation}
 
-The arc formulation proved to be efficient for very small instances of the problem (either in term of size of the grids or in term of the number of agents present). But for bigger instances, it proved inadequate: it took more than 30 minutes to guide 3 agents in a  $(30 \times 30)$ complex environment, while it took the flow formulation approximately 3 minutes.
+The arc formulation proved to be efficient for very small instances of the problem (either in terms of size of the grids or in terms of the number of agents present). But for bigger instances, it proved inadequate: it took more than 30 minutes to guide 3 agents in a  $(30 \times 30)$ complex environment, while it took the flow formulation approximately 3 minutes.
 
-Figure \ref{fig:numberVar} shows why the arc formulation is inefficient by showing the average number of variables for one commodity in function of the size of the instance.
+Figure \ref{fig:numberVar} shows why the arc formulation is inefficient by showing the average number of variables for one commodity in terms of the size of the instance.
 
 
 \begin{figure}[h]
@@ -833,13 +835,13 @@ The greedy algorithm is probably not the best way to go for this problem. Maybe 
 
 \subsubsection{Comparison of the two formulations}
 
-While we have seen that the number of variables for the arc formulation grows out of control even for middle-sized instance, it is interesting to note that the number of constraints in the linear program stays similar for the arc formulation and for the path formulation. Only the flow conservation constraints are lost when switching paradigm.
+While we have seen that the number of variables for the arc formulation grows out of control even for middle-sized instance, it is interesting to note that the number of constraints in the linear program stays similar for the arc formulation and the path formulation. Only the flow conservation constraints are lost when switching paradigm.
 
-The two methods arrive almost always at the same cost. If there is a difference the arc formulation actually has the better solution. The difference could be explained by the way we relax our problem for the path formulation: we restrict our linear program to a set of paths that are optimal for the relaxed LP only. It is worth noting that this difference is always smaller than 2 time steps, so the flow formulation still finds very good solutions.
+The two methods arrive almost always at the same cost. If there is a difference the arc formulation has a better solution. The difference could be explained by the way we relax our problem for the path formulation: we restrict our linear program to a set of paths that are optimal for the relaxed LP only. It is worth noting that this difference is always smaller than 2 timesteps, so the flow formulation still finds very good solutions.
 
-We now compare our two methods in term of speeds. The speed is measured from the moment the solver receives and environment from flatland to the moment it can outputs the paths for all the trains. Figure \ref{fig:comparison} shows the improvement made by the second method: we accelerate the process in average by $96\%$ for sparse environments and by $98\%$ for complex environments.
+We now compare our two methods in terms of speeds. The speed is measured from the moment the solver receives an environment from flatland to the moment it can output the paths for all the trains. Figure \ref{fig:comparison} shows the improvement made by the second method: we accelerate the process on average by $96\%$ for sparse environments and by $98\%$ for complex environments.
 
-Figure \ref{fig:numberVar} explains the difference in speed gain: the sparse environment have less edges than the complex one, so the gain in reducing the number of variables is less. 
+Figure \ref{fig:numberVar} explains the difference in speed gain: the sparse environment has fewer edges than the complex one, so the gain in reducing the number of variables is less. 
 
 \begin{figure}[h]
 	\centering
@@ -852,12 +854,12 @@ Figure \ref{fig:numberVar} explains the difference in speed gain: the sparse env
 
 \subsection{Comparison with reinforcement learning approach}
 
-At the same time this project was made, another one was studying the use of reinforcement learning to solve this competition. Here is a brief comparison of the two, but is far from complete and should be studied much further.
+At the same time this project was made, another one was studying the use of reinforcement learning to solve this competition. Here is a brief comparison of the two, but it is far from complete and should be studied much further.
 
-We arrived at the conclusion that for the \emph{VRP}  the combinatorial approach was better in term of ease to implement and actual performance. On the other hand, considering the \emph{VRSP}, the reinforcement learning approach seems to have an edge compare to ours, due to its ability to modify trajectories \emph{on the fly}, without needing to recompute a plan for all the trains.
+We concluded that for the \emph{VRP}  the combinatorial approach was better in terms of ease to implement and actual performance. On the other hand, considering the \emph{VRSP}, the reinforcement learning approach seems to have an edge compared to ours, due to its ability to modify trajectories \emph{on the fly}, without needing to recompute a plan for all the trains.
 
 
-There is of course the difference that the reinforcement learning algorithms need days to train while the combinatorial optimization methods need none. 
+There is, of course, the difference that the reinforcement learning algorithms need days to train while the combinatorial optimization methods need none. 
 
 
 \newpage
@@ -865,13 +867,13 @@ There is of course the difference that the reinforcement learning algorithms nee
 To get the best of both worlds, here are our ideas on how to combine the combinatorial approach that was developed in this project with reinforcement learning.
 
 \begin{itemize}
-	\item We could use the same technique that was used in AlphaGo  by \cite{alphago}: \enquote{ The policy network was trained initially by supervised learn­ing to accurately predict human expert moves, and was subsequently refined by policy­gradient reinforcement learning}. In our case, the human expert dataset would be replaced by deterministic solution found with our method (CO). This would allow the model to handle the problem without stochastic events.
+	\item We could use the same technique that was used in AlphaGo by \cite{alphago}: \enquote{ The policy network was trained initially by supervised learn­ing to accurately predict human expert moves, and was subsequently refined by policy­gradient reinforcement learning}. In our case, the human expert dataset would be replaced by deterministic solutions found with our method (CO). This would allow the model to handle the problem without stochastic events.
 	
-	In order to reroute the trains on the fly and solve completely the challenge, one could then refine the policy network on instances with  stochastic events.
+	To reroute the trains on the fly and solve completely the challenge, one could then refine the policy network on instances with stochastic events.
 	
-	\item Another way to go would be do use the reinforcement learning approach as a high level guide on which direction to go, and then let the combinatorial optimization method deals with the low level path finding. Figure \ref{combining_approach} gives a better view of this idea. 
+	\item Another way to go would be do use the reinforcement learning approach as a high-level guide on which direction to go, and then let the combinatorial optimization method deals with the low-level pathfinding. Figure \ref{combining_approach} gives a better view of this idea. 
 	
-	This takes advantage of the fact that the combinatorial optimization approach is really fast for small grids, and we hope the high level reinforcement learning will learn to reroute the trains in case of stochastic events.
+	This takes advantage of the fact that the combinatorial optimization approach is really fast for small grids, and we hope the high-level reinforcement learning will learn to reroute the trains in case of stochastic events.
 	\begin{figure}[h]
 		\begin{minipage}{0.5\linewidth}
 			\includegraphics[width=\linewidth]{img/grid_image_blue.jpg}
@@ -899,13 +901,13 @@ To get the best of both worlds, here are our ideas on how to combine the combina
 \label{sec:conclusion}
 \addcontentsline{toc}{section}{\nameref{sec:conclusion}}
 
-The \emph{vehicle routing problem (VRP)} was successfully  solved with combinatorial methods for most instances (even if for bigger instances improvements should be made). On the other hand, our formulation in term of flows failed to solve efficiently the \emph{vehicle re-scheduling problem (VRSP)} in this case.
+The \emph{vehicle routing problem (VRP)} was successfully  solved with combinatorial methods for most instances (even if for bigger instances improvements should be made). On the other hand, our formulation in terms of flows failed to solve efficiently the \emph{vehicle re-scheduling problem (VRSP)} in this case.
 
 
 Examples of improvements include, but are not limited to, developing a better initial solution generator, improving the data structures to minimize the memory footprint, make the solver more robust to edge cases $\ldots$ 
 
 
-Other approaches such are double vertex graph (\cite{BachelorThesis}) and multiple agent path finding (MAPF) could also be considered.
+Other approaches such as double vertex graph (\cite{BachelorThesis}) and multiple agent pathfinding (MAPF) could also be considered.
 
 
 
@@ -934,21 +936,21 @@ It is easier to go through the activated restrictions (i.e. restrictions through
 		
 		\includegraphics[width=\linewidth]{img/time1.png}
 		\caption*{Arc formulation.}
-
+		
 	\end{minipage}
 	\begin{minipage}{0.5\linewidth}
 		\includegraphics[width=\linewidth]{img/time2.png}
 		\caption*{Column generation method.}
 	\end{minipage}
 	\caption{time to solution for the two combinatorial methods used, in function of the size of the grid. Beware of the change in scale in the x-axis: the graph on the right goes up to a grid of $(100\times100)$ ! }
-
+	
 \end{figure}
 
 
 
 \newpage
 \fancyhead[R]{\emph{REFERENCES}}
- \nocite{*} 
+\nocite{*} 
 
 
 \bibliographystyle{apa-good}
@@ -957,3 +959,8 @@ It is easier to go through the activated restrictions (i.e. restrictions through
 
 
 \end{document}
+
+
+
+
+
