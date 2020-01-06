@@ -121,7 +121,7 @@ Reinforcement learning and robot navigation}
 %----------------------------------------------------------------------------------------
 
 \HRule \\[0.4cm]
-{ \huge \bfseries A combinatorial approach to the trains routing problem}\\[0.4cm] % Title of your document
+{ \huge \bfseries A combinatorial approach to the train routing problem}\\[0.4cm] % Title of your document
 \HRule \\[1.5cm]
  
 %----------------------------------------------------------------------------------------
@@ -277,9 +277,9 @@ As the competition went on, additional complexities were added to the environmen
 
 
 
-\newpage
 
-\newpage
+
+%\newpage
 \section{Modelization of the environment}
 
 To have a formulation of our problem in terms of dynamic multicommodity flows (\emph{multicommodity flows over time}), we need to first define the graph representing the railway network from the 2D grid world. Then we need to embed the time component in our model using a time expanded network, bringing our problem back to a static multicommodity flow problem.
@@ -474,7 +474,9 @@ When a failure happens, suppose $k$ trains break down among the $n$ in the netwo
 
 
 The following sections consider one unique speed for all the trains and no stochastic events. This can easily be adapted following the above discussion.
-\newpage
+
+
+%\newpage
 \section{Minimum cost multicommodity flow}
 
 We now consider the time expanded network defined in section \ref*{ten} and denote it by $G = (V,A)$. The trains will be the commodities, we suppose that we have $K$ of them, with the same speed and no breakdowns.
@@ -721,7 +723,7 @@ Following \cite[p.~669]{networkflows}, we consider only \eqref{eq:cond2}. Indeed
 
 The only indication of the basis not being optimal is then the second condition \eqref{eq:cond2}. If we find a path with a negative reduced cost, we can add it to the basis and improve our actual cost. We see now that the pricing problem can be efficiently solved.
 
-\newpage
+%\newpage
 \paragraph{Solving the pricing problem efficiently}
 Because of the particular nature of the restrictions in our problem, one can see that no restriction can span more than one timestep in the time expanded network and that a path cannot have two edges in the same timestep (see section \ref*{restrictions}). 
 
@@ -793,10 +795,10 @@ For now, this is done by \cite{gurobi} automatically, using branch-price-and-cut
 
 
 
-\newpage
+%\newpage
 \section{Results}
 
-To solve the linear programs we use the commercial solver \cite{gurobi}. To obtain the integral solution we use their optimized algorithms which might differ from what is described in section \ref{relaxation}. The rest of the implementation is in Python and can be found at \cite{GIT}.
+To solve the linear programs we use the commercial solver \cite{gurobi}. To obtain the integral solution we use their optimized algorithms. The rest of the implementation is in Python and can be found at \cite{GIT}.
 
 
 All experiments are done with constant speeds for all the trains and no stochastic events.
@@ -852,19 +854,19 @@ Figure \ref{fig:numberVar} explains the difference in speed gain: the sparse env
 
 
 
-\subsection{Comparison with reinforcement learning approach}
+%\subsection{Comparison with reinforcement learning approach}
 
-At the same time this project was made, another one was studying the use of reinforcement learning to solve this competition. Here is a brief comparison of the two, but it is far from complete and should be studied much further.
+%At the same time this project was made, another one was studying the use of reinforcement learning to solve this competition. Here is a brief comparison of the two, but it is far from complete and should be studied much further.
 
-We concluded that for the \emph{VRP}  the combinatorial approach was better in terms of ease to implement and actual performance. On the other hand, considering the \emph{VRSP}, the reinforcement learning approach seems to have an edge compared to ours, due to its ability to modify trajectories \emph{on the fly}, without needing to recompute a plan for all the trains.
-
-
-There is, of course, the difference that the reinforcement learning algorithms need days to train while the combinatorial optimization methods need none. 
+%We concluded that for the \emph{VRP}  the combinatorial approach was better in terms of ease to implement and actual performance. On the other hand, considering the \emph{VRSP}, the reinforcement learning approach seems to have an edge compared to ours, due to its ability to modify trajectories \emph{on the fly}, without needing to recompute a plan for all the trains.
 
 
-\newpage
+%There is, of course, the difference that the reinforcement learning algorithms need days to train while the combinatorial optimization methods need none. 
+
+
+%\newpage
 \section{On the mixed RL-CO approach}
-To get the best of both worlds, here are our ideas on how to combine the combinatorial approach that was developed in this project with reinforcement learning.
+At the same time this project was made, another one was studying the use of reinforcement learning to solve this competition. Here are our ideas on how to combine the combinatorial approach that was developed in this project with reinforcement learning.
 
 \begin{itemize}
 	\item We could use the same technique that was used in AlphaGo by \cite{alphago}: \enquote{ The policy network was trained initially by supervised learn­ing to accurately predict human expert moves, and was subsequently refined by policy­gradient reinforcement learning}. In our case, the human expert dataset would be replaced by deterministic solutions found with our method (CO). This would allow the model to handle the problem without stochastic events.
@@ -877,16 +879,16 @@ To get the best of both worlds, here are our ideas on how to combine the combina
 	\begin{figure}[h]
 		\begin{minipage}{0.5\linewidth}
 			\includegraphics[width=\linewidth]{img/grid_image_blue.jpg}
-			\caption*{High level prediction of the reinforcement learning approach}
+			\caption*{High level prediction of the reinforcement learning approach.}
 		\end{minipage}
 		\hspace{0.1\linewidth}
 		\begin{minipage}{0.4\linewidth}
 			\vspace{1.3cm}
 			\includegraphics[width=\linewidth]{img/cropped.png}
 			\vspace{1.6cm}
-			\caption*{Low level path finding by combinatorial optimization}
+			\caption*{Low level path finding by combinatorial optimization.}
 		\end{minipage}
-		\caption{Example of combination of two approaches. The red dots indicate where the reinforcement learning approach guides at a high level. The red squares on the right represent the work of the combinatorial method.}
+		\caption{Example of combination of two approaches. The red dots indicate where the reinforcement learning approach guides at a high level. The figure on the right show the path found with combinatorial optimization in the restricted area around the train.}
 		\label{combining_approach}
 	\end{figure}
 	
@@ -895,8 +897,9 @@ To get the best of both worlds, here are our ideas on how to combine the combina
 
 
 
-%\fancyhead[R]{\emph{CONCLUSION}}
+
 \newpage
+\fancyhead[R]{\emph{CONCLUSION}}
 \section*{Conclusion}
 \label{sec:conclusion}
 \addcontentsline{toc}{section}{\nameref{sec:conclusion}}
@@ -907,7 +910,7 @@ The \emph{vehicle routing problem (VRP)} was successfully  solved with combinato
 Examples of improvements include, but are not limited to, developing a better initial solution generator, improving the data structures to minimize the memory footprint, make the solver more robust to edge cases $\ldots$ 
 
 
-Other approaches such as double vertex graph (\cite{BachelorThesis}) and multiple agent pathfinding (MAPF) could also be considered.
+Other approaches such as double vertex graph (\cite{BachelorThesis}) and multiple agent pathfinding (MAPF) could also be considered. But the most promising approach would be a mix of reinforcement learning and combinatorial optimization as describe in the last section.
 
 
 
