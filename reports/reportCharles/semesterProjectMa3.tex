@@ -141,7 +141,8 @@ Charles Dufour
 Prof. Friedrich Eisenbrand \\% Supervisor's Name
 Jonas Racine
 \end{flushright}
-\end{minipage}\\[5cm]
+\end{minipage}\\[6cm]
+
 
 %----------------------------------------------------------------------------------------
 %   LOGO SECTION
@@ -149,9 +150,13 @@ Jonas Racine
 \centering
  \includegraphics[width=0.5\linewidth]{img/logo.eps}\\ % Include a department/university logo - this will require the graphicx package
 
- 
+
  
 %----------------------------------------------------------------------------------------
+
+
+
+
 
 \vfill % Fill the rest of the page with whitespace
 
@@ -173,6 +178,10 @@ Jonas Racine
 
 
 
+\begin{abstract}
+	We tackle the \emph{vehicle routing problem (VRP)} and \emph{vehicle re-scheduling problem (VRSP)} through an online competition using \emph{dynamic multicommodity flows}.
+\end{abstract}
+
 \tableofcontents
 \pagenumbering{gobble}
 
@@ -192,16 +201,78 @@ Jonas Racine
 \label{sec:intro}
 \addcontentsline{toc}{section}{\nameref{sec:intro}}
 
-$\quad$ We tackle the \emph{vehicle routing problem (VRP)} and \emph{vehicle re-scheduling problem (VRSP)} through an online competition. We first develop a particular graph to model the underlying railway network. We then formulate our problem as a \emph{dynamic minimum cost multicommodity flow problem}, and derive the explicit column generation method to solve it efficiently.
-
-All the code can be found in this repository (\cite{GIT}).
+$\quad$ We tackle the \emph{vehicle routing problem (VRP)} and \emph{vehicle re-scheduling problem (VRSP)} through an online competition using combinatorial optimization methods. We first develop a particular graph to model the underlying railway network. We then formulate our problem as a \emph{dynamic minimum cost multicommodity flow problem} and derive the explicit column generation method to solve it efficiently.
+All the code is in this repository (\cite{GIT}), containing also a reinforcement learning approach conducted in parallel by a fellow student.
 
 
 
 
 
 \section{Flatland Challenge}
-\todo[inline]{\blindtext \\ \blindtext}
+
+
+The Flatland challenge is a challenge proposed by SBB (Swiss Federal Railways) on aicrowd \footnote{https://www.aicrowd.com/challenges/flatland-challenge}. The challenge addresses the re-scheduling problem (RSP), a problem faced by many transportation and logistics companies. The challenge consists in solving different tasks on a simplified 2D multi-agent railway simulation. 
+
+More precisely, a typical task consists of a railway where agents are spawned. Each must then arrive at its target (a train-station), in the shortest amount of time possible. The goal is to minimize the cumulative time of travel over all agents. Figure \ref{complexsparse} shows grids given by two different railway generators provided by the flatland package.    
+
+
+\begin{figure}[h]
+	\begin{minipage}{0.5\linewidth}
+		\includegraphics[width=\linewidth]{img/env_complex.png}
+		\caption*{Complex environment.}
+		\label{fig:env}
+	\end{minipage}
+	\begin{minipage}{0.5\linewidth}
+		\includegraphics[width=\linewidth]{img/env_sparse.png}
+		\caption*{Sparse environment.}
+	\end{minipage}
+	\caption{Randomly generated $30 \times 30$ grids for 20 agents.}
+	\label{complexsparse}
+\end{figure}
+
+Flatland is a discrete-time simulation. At each step, the agents (the trains) can choose an action. For the chosen action the attached transition will be executed. While executing a transition Flatland checks whether the requested transition is valid. If the transition is valid the transition will update the agents' position. In case the transition call is not allowed the agent will not move \footnote{\url{http://flatland-rl-docs.s3-website.eu-central-1.amazonaws.com/04_specifications.html}}.
+
+The possible actions of an agent in flatland are: moving forward, turning (left or right) and stopping.
+
+\begin{figure}[h]
+	\begin{minipage}{0.5\linewidth}
+		\centering
+		\includegraphics[width=\linewidth]{img/switch_behavior.png}
+		\caption*{Possible paths for 8 time steps.}
+		\label{fig:env}
+	\end{minipage}
+	\hspace{0.1\linewidth}
+	\begin{minipage}{0.3\linewidth}
+		\centering
+		\vspace{1.4cm}
+		\includegraphics[width=0.7\linewidth]{img/switch.png}
+		\vspace{1.8cm}
+		\caption*{Switch example.}
+	\end{minipage}
+	\caption{In the switch example, notice that an agent facing East may not use the switch to go downwards.}
+	\label{switches}
+\end{figure}
+
+
+Specific constraints arise in this environment:
+\begin{itemize}
+	\item When arriving at a dead-end, moving forward makes a train turn-around.
+	\item On a cell containing switches, the orientation of a train matters concerning the switches it may use. Figure \ref{switches} shows an example of this behavior. 
+	\item Agents may not occupy the same cell at the same time.
+	\item Agent cannot "go through" each other. Two agents facing each other in adjacent cells result in a dead-lock: the trains are stuck as they can neither swap their positions nor turn around. An example is given in Figure \ref{blocked}. 
+\end{itemize}
+
+
+
+
+\begin{figure}
+	\centering
+	\includegraphics[width = 0.6\linewidth]{img/blocked_agents.png}
+	\caption{In this setting, the agents are in a dead-lock and unable to move nor turn around}
+	\label{blocked}
+\end{figure}
+
+As the competition went on, additional complexities were added to the environment. The trains now having different possible speeds as well as stochastic breakdown events. More specifically, each train had an attribute \textit{speed ratio}, which specified how many time steps it needed to advance to the next cell. For example, an agent with a speed ratio of $\frac{1}{3}$ would need three time steps move to the next cell. Additionally, agent were also subject to stochastic $breakdowns$ following a Poisson process. During a breakdown, an agent would remain immobile for a variable amount of time steps thus blocking its current cell.
 
 
 
@@ -404,7 +475,7 @@ The following sections considers one unique speed for all the trains and no stoc
 \newpage
 \section{Minimum cost multicommodity flow}
 
-We now consider the time expanded network defined in section \ref*{ten} and denote it by $G = (V,A)$. The trains will be the commodities, we suppose that we have $K$ of them.
+We now consider the time expanded network defined in section \ref*{ten} and denote it by $G = (V,A)$. The trains will be the commodities, we suppose that we have $K$ of them, with the same speed and no breakdowns.
 
 We now formalize the definition of restriction as described in section \ref*{sec:restrictions}.
 
@@ -603,7 +674,6 @@ f(\mathcal{P})^T \left( \begin{matrix} -A_{C_R}^T, A_K^T, -A_K^T \end{matrix} \r
 \end{align*}
 
 Which is exactly what we aimed to obtain.
-
 The other direction is similar.
 
 	 
@@ -786,21 +856,45 @@ At the same time this project was made, another one was studying the use of rein
 
 We arrived at the conclusion that for the \emph{VRP}  the combinatorial approach was better in term of ease to implement and actual performance. On the other hand, considering the \emph{VRSP}, the reinforcement learning approach seems to have an edge compare to ours, due to its ability to modify trajectories \emph{on the fly}, without needing to recompute a plan for all the trains.
 
+
 There is of course the difference that the reinforcement learning algorithms need days to train while the combinatorial optimization methods need none. 
 
 
 \newpage
 \section{On the mixed RL-CO approach}
+To get the best of both worlds, here are our ideas on how to combine the combinatorial approach that was developed in this project with reinforcement learning.
 
-In order to get the best of both worlds, here are our ideas on how to combine the combinatorial approach that was developed in this project with reinforcement learning.
-
-\todo[inline]{\blindtext}
-
-
+\begin{itemize}
+	\item We could use the same technique that was used in AlphaGo  by \cite{alphago}: \enquote{ The policy network was trained initially by supervised learn­ing to accurately predict human expert moves, and was subsequently refined by policy­gradient reinforcement learning}. In our case, the human expert dataset would be replaced by deterministic solution found with our method (CO). This would allow the model to handle the problem without stochastic events.
+	
+	In order to reroute the trains on the fly and solve completely the challenge, one could then refine the policy network on instances with  stochastic events.
+	
+	\item Another way to go would be do use the reinforcement learning approach as a high level guide on which direction to go, and then let the combinatorial optimization method deals with the low level path finding. Figure \ref{combining_approach} gives a better view of this idea. 
+	
+	This takes advantage of the fact that the combinatorial optimization approach is really fast for small grids, and we hope the high level reinforcement learning will learn to reroute the trains in case of stochastic events.
+	\begin{figure}[h]
+		\begin{minipage}{0.5\linewidth}
+			\includegraphics[width=\linewidth]{img/grid_image_blue.jpg}
+			\caption*{High level prediction of the reinforcement learning approach}
+		\end{minipage}
+		\hspace{0.1\linewidth}
+		\begin{minipage}{0.4\linewidth}
+			\vspace{1.3cm}
+			\includegraphics[width=\linewidth]{img/cropped.png}
+			\vspace{1.6cm}
+			\caption*{Low level path finding by combinatorial optimization}
+		\end{minipage}
+		\caption{Example of combination of two approaches. The red dots indicate where the reinforcement learning approach guides at a high level. The red squares on the right represent the work of the combinatorial method.}
+		\label{combining_approach}
+	\end{figure}
+	
+	
+\end{itemize}
 
 
 
 %\fancyhead[R]{\emph{CONCLUSION}}
+\newpage
 \section*{Conclusion}
 \label{sec:conclusion}
 \addcontentsline{toc}{section}{\nameref{sec:conclusion}}
