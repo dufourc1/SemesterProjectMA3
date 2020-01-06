@@ -875,7 +875,7 @@ At the same time this project was made, another one was studying the use of rein
 	
 	\item Another way to go would be do use the reinforcement learning approach as a high-level guide on which direction to go, and then let the combinatorial optimization method deals with the low-level pathfinding. Figure \ref{combining_approach} gives a better view of this idea. 
 	
-	This takes advantage of the fact that the combinatorial optimization approach is really fast for small grids, and we hope the high-level reinforcement learning will learn to reroute the trains in case of stochastic events.
+	This takes advantage of the fact that the combinatorial optimization approach is really fast for small grids while being exact, and we hope the high-level reinforcement learning will learn to reroute the trains in case of stochastic events.
 	\begin{figure}[h]
 		\begin{minipage}{0.5\linewidth}
 			\includegraphics[width=\linewidth]{img/grid_image_blue.jpg}
@@ -888,7 +888,7 @@ At the same time this project was made, another one was studying the use of rein
 			\vspace{1.6cm}
 			\caption*{Low level path finding by combinatorial optimization.}
 		\end{minipage}
-		\caption{Example of combination of two approaches. The red dots indicate where the reinforcement learning approach guides at a high level. The figure on the right show the path found with combinatorial optimization in the restricted area around the train.}
+		\caption{Example of combination of two approaches. The train starts in the uper right corner, heading south. The red dots indicate where the reinforcement learning agent wants to go at a high level. The figure on the right show the path found with combinatorial optimization to the milestone put by the reinforcement learning agent.}
 		\label{combining_approach}
 	\end{figure}
 	
