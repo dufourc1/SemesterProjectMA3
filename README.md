@@ -35,10 +35,10 @@ Project Organization
         │   │                 predictions
         │   └── DQL
         │ 
-        ├── graph
+        ├── graph           <- transition graph 
         │ 
         │ 
-        ├── flows
+        ├── flows           <- time expanded graph and linear programs
         │ 
         │ 
         ├── MAPF
